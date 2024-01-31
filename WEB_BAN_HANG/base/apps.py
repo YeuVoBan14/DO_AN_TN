@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class WebBanHangConfig(AppConfig):
+class BaseConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'WEB_BAN_HANG'
+    name = 'base'
