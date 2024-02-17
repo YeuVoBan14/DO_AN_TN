@@ -1,0 +1,39 @@
+{% extends "main/main.html" %}
+{% block content %}
+<h1>Hoang Nhat Hung<h1>
+
+{% for product in page.object_list %}
+<div style="font-size:20px;">
+        <span>{{product.name}} {{product.quantity}} {{product.image.url}} {{product.cat}}
+        </span>
+        <img src="{{product.image.url}}" alt="">
+        <button>add to cart</button>
+        <a href="{% url 'product' product.id %}" >view detail</a>
+</div>
+{% endfor %}
+<nav aria-label="Page navigation example">
+        <span style="font-size:20px;">Page {{page.number}}/{{page.paginator.num_pages}}</span>
+        <ul class="pagination">
+        {% if page.has_previous %}
+        <li class="page-item"><a class="page-link"
+                href="{% url 'home' %}?page={{page.previous_page_number}}">Previous</a>
+        </li>
+        {% endif %}
+        {% for num_page in page.paginator.page_range %}
+        {% if page.number == num_page %}
+        <li class="page-item active"><a class="page-link"
+                href="{% url 'home' %}?page={{num_page}}">{{num_page}}</a>
+        </li>
+        {% else %}
+        <li class="page-item"><a class="page-link" href="{% url 'home' %}?page={{num_page}}">{{num_page}}</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+        {% if page.has_next %}
+        <li class="page-item"><a class="page-link"
+                href="{% url 'home' %}?page={{page.next_page_number}}">Next</a>
+        </li>
+        {% endif %}
+        </ul>
+</nav>
+{% endblock content %}
