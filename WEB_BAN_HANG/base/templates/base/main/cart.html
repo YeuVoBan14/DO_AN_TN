@@ -1,0 +1,24 @@
+{% extends "main/main.html" %}
+{% block content %}
+<h1>Cart</h1>
+<div class="container">
+    {% if cart_products %}
+        {% for product in cart_products %}
+        {{product}} // {{product.price_sell}}<br>
+        <div class="product_count">
+            {% for key, value in quantities.items %}
+            {% if key == product.id|slugify %}
+            <input type="text" name="qty" id="select{{product.id}}" maxlength="12" title="Quantity:" class="input-text qty" value="{{value}}">
+            {% endif %}
+            {% endfor %}
+            <button onclick="var result = document.getElementById('select{{product.id}}'); var sst = result.value; if( !isNaN( sst ) &amp;&amp; sst < {{product.quantity}}) result.value++;return false;" class="increase items-count" type="button"><i class="fa-solid fa-chevron-up"></i></button>
+            <button onclick="var result = document.getElementById('select{{product.id}}'); var sst = result.value; if( !isNaN( sst ) &amp;&amp; sst > 1 ) result.value--;return false;" class="reduced items-count" type="button"><i class="fa-solid fa-chevron-down"></i></button>
+        </div>
+        <button type="button" data-index="{{product.id}}" class="btn btn-secondary update-cart">Update</button>  
+        <hr>      
+        {% endfor %}
+    {% else %}
+    <p>Your shopping cart is empty.</p><br>
+    {% endif %}
+</div>
+{% endblock content %}

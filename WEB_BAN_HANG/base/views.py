@@ -1,11 +1,13 @@
-from django.shortcuts import render, redirect
-from .models import User, ShippingAdress, Category, Suppiler, Product, Cart, Message, Invoice, InvoiceItem, Order, OrderItem
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import *
+from .cart import Cart
 from django.db.models import Q
 from django.contrib.auth.forms import UserCreationForm
 from .forms import MyUserCreationForm
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
+from django.http import JsonResponse
 # Create your views here.
 def loginPage(request):
     page = 'login'
@@ -63,7 +65,8 @@ def home(request):
     page = Paginator(products, 2)
     page_list = request.GET.get('page')
     page = page.get_page(page_list)
-    context = {'products':products,'page':page}
+    cats = Category.objects.exclude(parent=None).order_by('name')
+    context = {'products':products,'page':page, 'cats':cats}
     return render(request, 'base/main/home.html', context)
 
 def productPage(request, pk):
@@ -71,5 +74,47 @@ def productPage(request, pk):
     # reviews = Review.objects.filter(product = product).order_by("-date")
     context = {'product': product}
     return render(request,'base/main/product.html',context)
+
+#-------------------------Cart----------------------------
+def cart(request):
+    #Get the cart
+    cart = Cart(request)
+    cart_products = cart.get_prods()
+    quantities = cart.get_quants()
+    context = {'cart_products':cart_products, 'quantities':quantities}
+    return render(request, 'base/main/cart.html', context)
+def cartAdd(request):
+    #Get the cart
+    cart = Cart(request)
+    #test for POST
+    if request.POST.get('action') == 'post':
+        product_id = int(request.POST.get('product_id'))
+        product_qty = int(request.POST.get('product_qty'))
+        #look up product in DB
+        product = get_object_or_404(Product, id=product_id)
+        #Save to session
+        cart.add(product=product, quantity=product_qty)
+
+        #Get Cart Quantity
+        cart_quantity = cart.__len__()
+
+        #Return a response
+        response = JsonResponse({'qty': cart_quantity })
+        return response
+
+def cartDelete(request):
+    pass
+def cartUpdate(request):
+    cart = Cart(request)
+    if request.POST.get('action') == 'post':
+        product_id = int(request.POST.get('product_id'))
+        product_qty = int(request.POST.get('product_qty'))
+
+        cart.update(product=product_id, quantity=product_qty)
+
+        response = JsonResponse({'qty': product_qty})
+        return response
+        #return redirect('cart')
+
 
 

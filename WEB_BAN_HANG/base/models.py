@@ -29,12 +29,6 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = CustomUserManager()
-class ShippingAdress(models.Model):
-    user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
-    address = models.CharField(max_length=200)
-    city = models.CharField(max_length=50)
-    state = models.CharField(max_length=50)
-    updated = models.DateTimeField(auto_now=True)
 class Category(models.Model):
     name = models.CharField(max_length=80)
     parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)
@@ -58,6 +52,9 @@ class Product(models.Model):
     image = models.ImageField(null=True,blank=True,default="product.jpg",upload_to='product')
     updated = models.DateTimeField(auto_now=True)
     created = models.DateTimeField(auto_now_add=True)
+    #Sale
+    is_sale = models.BooleanField(default=False)
+    sale_price = models.DecimalField(max_digits=6,decimal_places=2,default=0.0,blank=True)
     def __str__(self):
         return self.name
     @property
@@ -67,10 +64,15 @@ class Product(models.Model):
         except:
             url = ''
         return url
-class Cart(models.Model):
-    user = models.ForeignKey(User,on_delete=models.CASCADE)
-    product = models.ForeignKey(Product,on_delete=models.SET_NULL,null=True)
-    quantity = models.PositiveIntegerField()
+# class Cart(models.Model):
+#     user = models.ForeignKey(User,on_delete=models.CASCADE)
+#     product = models.ForeignKey(Product,on_delete=models.SET_NULL,null=True)
+#     quantity = models.PositiveIntegerField()
+#     def __str__(self):
+#         if self.user:
+#             return f'{self.user.first_name} {self.user.last_name}'
+#         else:
+#             return f'#{self.id}'
 class Message(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE)
     product = models.ForeignKey(Product,on_delete=models.CASCADE)
@@ -80,28 +82,53 @@ class Message(models.Model):
 
     class Meta:
         ordering = ['-updated', '-created']
+    def __str__(self):
+        if self.user:
+            return f'{self.user.first_name} {self.user.last_name}: {self.body[:50]}'
+        else:
+            return f'#{self.id}'
 class Invoice(models.Model):
     suppiler = models.ForeignKey(Suppiler,on_delete=models.DO_NOTHING)
-    created = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['-created']
-class InvoiceItem(models.Model):
-    invoice = models.ForeignKey(Invoice,on_delete=models.CASCADE)
-    product = models.ForeignKey(Product,on_delete=models.DO_NOTHING)
-    quantity = models.PositiveIntegerField(default=0)
-class Order(models.Model):
-    user = models.ForeignKey(User,on_delete=models.DO_NOTHING)
-    shippingadress = models.ForeignKey(ShippingAdress,on_delete=models.SET_NULL,null=True)
     status = models.SmallIntegerField(default=1)
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created']
+    def __str__(self):
+        return str(self.id)
+class InvoiceItem(models.Model):
+    invoice = models.ForeignKey(Invoice,on_delete=models.CASCADE)
+    product = models.ForeignKey(Product,on_delete=models.DO_NOTHING)
+    quantity = models.PositiveIntegerField(default=0, null=True, blank=True)
+    added = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return self.product.name
+class Order(models.Model):
+    user = models.ForeignKey(User,on_delete=models.DO_NOTHING)
+    status = models.SmallIntegerField(default=1)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created']
+    def __str__(self):
+        return str(self.id)
 class OrderItem(models.Model):
     order = models.ForeignKey(Order,on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
-    quantity = models.PositiveIntegerField(default=0)
+    quantity = models.PositiveIntegerField(default=0, null=True, blank=True)
+    added = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return self.product.name
+class ShippingAdress(models.Model):
+    user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True, blank=True)
+    order = models.ForeignKey("Order", on_delete=models.SET_NULL, null=True, blank=True)
+    address = models.CharField(max_length=200, null=True)
+    city = models.CharField(max_length=50, null=True)
+    state = models.CharField(max_length=50, null=True)
+    zipcode = models.CharField(max_length=50, null=True)
+    updated = models.DateTimeField(auto_now=True)
+    def __str__(self):
+        return self.address
 
 
 
