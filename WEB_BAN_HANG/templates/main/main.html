@@ -19,14 +19,14 @@
 
 <body>
     {% include "main/nav.html" %}
-
-    {% if messages %}
+    
     <ul class="messages">
         {% for message in messages %}
-        <li>{{ message }}</li>
+        <li>
+            {{ message }}
+        </li>
         {% endfor %}
     </ul>
-    {% endif %}
 
     {% block content %}
     {% endblock content %}
@@ -71,6 +71,32 @@
                 data: {
                     product_id: $(this).data('index'),
                     product_qty: $('#select' + productid).val(),
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    action: 'post'
+                },
+
+                success: function (json) {
+                    //console.log(json)
+                    //document.getElementById("cart_quantity").textContent = json.qty
+                    location.reload()
+                },
+                error: function (xhr, errmsg, err) {
+
+                }
+            });
+        })
+    </script>
+    <!-- script to delete item from cart -->
+    <script>
+        $(document).on('click', '.delete-cart-item', function (e) {
+            e.preventDefault();
+            //grab the product id
+            //var productid = $(this).data('index');
+            $.ajax({
+                type: 'POST',
+                url: '{% url "cart_delete" %}',
+                data: {
+                    product_id: $(this).data('index'),
                     csrfmiddlewaretoken: '{{ csrf_token }}',
                     action: 'post'
                 },

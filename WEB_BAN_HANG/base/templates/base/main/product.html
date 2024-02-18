@@ -6,7 +6,7 @@
     ID:{{product.id}}<br>
     quan:{{product.quantity}}<br>
     <div class="product_count">
-        <input type="text" name="qty" id="qty-cart" maxlength="12" title="Quantity:" class="input-text qty">
+        <input type="text" name="qty" id="qty-cart" maxlength="12" title="Quantity:" class="input-text qty" value="1">
         <button onclick="var result = document.getElementById('qty-cart'); var sst = result.value; if( !isNaN( sst ) &amp;&amp; sst < {{product.quantity}}) result.value++;return false;" class="increase items-count" type="button"><i class="fa-solid fa-chevron-up"></i></button>
         <button onclick="var result = document.getElementById('qty-cart'); var sst = result.value; if( !isNaN( sst ) &amp;&amp; sst > 1 ) result.value--;return false;" class="reduced items-count" type="button"><i class="fa-solid fa-chevron-down"></i></button>
     </div>

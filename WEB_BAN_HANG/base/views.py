@@ -81,8 +81,11 @@ def cart(request):
     cart = Cart(request)
     cart_products = cart.get_prods()
     quantities = cart.get_quants()
-    context = {'cart_products':cart_products, 'quantities':quantities}
+    totals = cart.cart_total()
+    item_total = cart.item_total()
+    context = {'cart_products':cart_products, 'quantities':quantities, 'totals':totals, 'item_total':item_total }
     return render(request, 'base/main/cart.html', context)
+
 def cartAdd(request):
     #Get the cart
     cart = Cart(request)
@@ -101,9 +104,15 @@ def cartAdd(request):
         #Return a response
         response = JsonResponse({'qty': cart_quantity })
         return response
-
 def cartDelete(request):
-    pass
+    cart = Cart(request)
+    if request.POST.get('action') == 'post':
+        product_id = int(request.POST.get('product_id'))
+        #call delete func
+        cart.delete(product=product_id)
+        #dont need this but use this to check to func is working
+        response = JsonResponse({'product': product_id})
+        return response
 def cartUpdate(request):
     cart = Cart(request)
     if request.POST.get('action') == 'post':
@@ -111,10 +120,9 @@ def cartUpdate(request):
         product_qty = int(request.POST.get('product_qty'))
 
         cart.update(product=product_id, quantity=product_qty)
-
+        #dont need this but use this to check to func is working
         response = JsonResponse({'qty': product_qty})
         return response
-        #return redirect('cart')
 
 
 
