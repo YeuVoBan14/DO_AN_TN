@@ -9,5 +9,5 @@ class MyUserCreationForm(UserCreationForm):
 class UserForm(ModelForm):
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'birth', 'email', 'phone']
+        fields = ['username', 'first_name', 'last_name', 'birth', 'gender', 'email', 'phone']
 

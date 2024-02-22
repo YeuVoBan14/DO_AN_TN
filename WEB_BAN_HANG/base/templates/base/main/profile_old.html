@@ -1,0 +1,27 @@
+{% extends "main/main.html" %}
+
+{% block content %}
+<div>
+    <span>{{ user.username }}</span>
+    <img src="{{ user.avatar.url }}" alt="" style="border-radius: 50%; width: 40px; height: 40px; align-items: center;">
+    <hr><br>
+    <form class="form" action="" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form__group">
+                {% if field.name == "birth" %}
+                    <label for="id_birth">Date of Birth</label>
+                    <input type="date" id="id_birth" name="birth" value="{{ field.value }}">
+                {% else %}
+                    <label for="{{ field.id }}">{{ field.label }}</label>
+                    {{ field }}
+                {% endif %}
+            </div>
+        {% endfor %}
+        <div class="form__action">
+            <a class="btn btn-secondary" href="{% url 'user-profile' request.user.id %}">Cancel</a>
+            <button class="btn btn-primary" type="submit">Update</button>
+        </div>
+    </form>
+</div>
+{% endblock content %}

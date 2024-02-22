@@ -1,5 +1,6 @@
 {% extends "main/main.html" %}
 {% block content %}
+<br><br><br><br><br><br><br><br>
 <h1>Cart</h1>
 <div class="container">
     {% if cart_products %}
@@ -27,6 +28,8 @@
         {% endfor %}
     <h3>Total: ${{totals}} </h3>
     <h3>Total: {{item_total}} </h3>
+    <h3>{{cart_products}}</h3>
+    <h3>{{quantities}}</h3>
     {% else %}
     <p>Your shopping cart is empty.</p><br>
     {% endif %}

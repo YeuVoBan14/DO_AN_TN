@@ -19,7 +19,7 @@ class Cart():
         product_qty = str(quantity)
         #Logic
         if product_id in self.cart:
-            messages.error(self.request,'You have add  this item before!')
+            pass
         else:
             #self.cart[product_id] = {'price': str(product.price_sell)}
             self.cart[product_id] = int(product_qty)

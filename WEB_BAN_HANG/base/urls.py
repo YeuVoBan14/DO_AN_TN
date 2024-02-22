@@ -14,4 +14,10 @@ urlpatterns = [
     path ('cart-delete/', views.cartDelete, name="cart_delete"),
     path ('cart-update/', views.cartUpdate, name="cart_update"),
 
+    path('delete-review/<str:pk>', views.deleteReview, name="delete-review"),
+
+    path('profile/<str:pk>', views.userProfile, name="user-profile"),
+
+    path('test', views.test, name="test")
+
 ]

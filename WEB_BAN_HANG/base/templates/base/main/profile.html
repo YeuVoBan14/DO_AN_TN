@@ -1,0 +1,168 @@
+{% extends "main/main.html" %}
+{% load static %}
+{% block content %}
+<!-- Start Banner Area -->
+<section class="banner-area organic-breadcrumb"
+    style="background-image: url({% static 'media/banner/common-banner.jpg' %});">
+    <div class="container">
+        <div class="breadcrumb-banner d-flex flex-wrap align-items-center justify-content-end">
+            <div class="col-first" style="max-width: 500px">
+                <h1 style="text-transform: uppercase;">Hello {{user.username}}</h1>
+                <nav class="d-flex align-items-center">
+                    <a href="{% url 'home' %}">Home<span class="lnr lnr-arrow-right"></span></a>
+                    <a href="#">Profile</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End Banner Area -->
+<!-- Start Blog Area -->
+<section class="blog_area single-post-area section_gap">
+    <div class="container">
+        <div class="row">
+
+            <div class="col-lg-8">
+                <div class="comment-form" style="margin-top: 0%;">
+                    <h4>Edit profile</h4>
+                    <form action="" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="form-group">
+                                {% if field.name == 'gender' %}
+                                    <label>{{ field.label }}</label>
+                                    <input type="radio" id="{{ field.id }}_true" name="{{ field.html_name }}" value="True" {% if field.value == 'True' %} checked {% endif %}>
+                                    <label for="{{ field.id }}_true">True</label>
+                                    <input type="radio" id="{{ field.id }}_false" name="{{ field.html_name }}" value="False" {% if field.value == 'False' %} checked {% endif %}>
+                                    <label for="{{ field.id }}_false">False</label>
+                                {% elif field.name == 'birth' %}
+                                    <label for="{{ field.id }}">{{ field.label }}</label>
+                                    <input type="date" class="form-control" id="{{ field.id }}" name="{{ field.html_name }}" value="{{ field.value }}">
+                                {% else %}
+                                    <input type="{{ field.field.widget.input_type }}" class="form-control" id="{{ field.id }}" name="{{ field.html_name }}" placeholder="{{ field.label }}" value="{{ field.value }}">
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        <button type="submit" class="primary-btn submit_btn">Update</button>
+                    </form>
+                    
+                    
+                                                                       
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="blog_right_sidebar">
+                    <aside class="single_sidebar_widget author_widget">
+                        <img class="author_img rounded-circle" src="{{user.ImageURL}}" alt="" style="width: 150px; height: 150px;">
+                        <h4 style="text-transform: capitalize;">{{user.first_name}} {{user.last_name}}</h4>
+                        <p>@{{user.username}}</p>
+                        <a href="#" class="genric-btn primary small">Small</a>
+                        <div class="social_icon">
+                            <a href="#"><i class="fa fa-facebook"></i></a>
+                            <a href="#"><i class="fa fa-twitter"></i></a>
+                            <a href="#"><i class="fa fa-github"></i></a>
+                            <a href="#"><i class="fa fa-behance"></i></a>
+                        </div>
+                        <p>Boot camps have its supporters andit sdetractors. Some people do not understand why you
+                            should have to spend money on boot camp when you can get. Boot camps have itssuppor
+                            ters andits detractors.</p>
+                        <div class="br"></div>
+                    </aside>
+                </div>
+            </div>
+
+            <!--================Product Description Area =================-->
+            <section class="product_description_area">
+                <div class="container">
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home"
+                                aria-selected="true">Description</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" id="review-tab" data-toggle="tab" href="#review" role="tab"
+                                aria-controls="review" aria-selected="false">Reviews</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="myTabContent">
+                        <div class="tab-pane fade" id="home" role="tabpanel" aria-labelledby="home-tab">
+                            <div class="section-top-border">
+                            <div class="progress-table-wrap row">
+                                <div class="progress-table col-lg-12">
+                                    <div class="table-head">
+                                        <div class="serial">#</div>
+                                        <div class="country">Countries</div>
+                                        <div class="visit">Visits</div>
+                                        <div class="percentage">Percentages</div>
+                                    </div>
+                                    
+                                    <div class="table-row">
+                                        <div class="serial">07</div>
+                                        <div class="country"> <img src="img/elements/f7.jpg" alt="flag">Canada</div>
+                                        <div class="visit">645032</div>
+                                        <div class="percentage">
+                                            <div class="progress">
+                                                <div class="progress-bar color-7" role="progressbar" style="width: 30%" aria-valuenow="30" aria-valuemin="0"
+                                                 aria-valuemax="100"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                        <div class="tab-pane fade show active" id="review" role="tabpanel" aria-labelledby="review-tab">
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="row total_rate">
+                                        <div class="col-6">
+                                            
+                                        </div>
+                                    </div>
+                                    <div class="review_list">
+                                        <div class="review_item">
+                                            <div class="media">
+                                                <div class="d-flex">
+                                                    <img src="img/product/review-1.png" alt="">
+                                                </div>
+                                                <div class="media-body">
+                                                    <h4>Blake Ruiz</h4>
+                                                    <i class="fa fa-star"></i>
+                                                    <i class="fa fa-star"></i>
+                                                    <i class="fa fa-star"></i>
+                                                    <i class="fa fa-star"></i>
+                                                    <i class="fa fa-star"></i>
+                                                </div>
+                                            </div>
+                                            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
+                                                incididunt ut labore et
+                                                dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+                                                laboris nisi ut aliquip ex ea
+                                                commodo</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="review_box">
+                                        <h4>Yonex Men's Crew Neck Shirt</h4>
+                                        <form class="row contact_form" action="contact_process.php" method="post"
+                                            id="contactForm" novalidate="novalidate">
+                                            <div class="col-md-12 text-right">
+                                                <button type="submit" value="submit" class="primary-btn">Submit Now</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!--================End Product Description Area =================-->
+        </div>
+    </div>
+</section>
+<!-- End Blog Area -->
+{% endblock content %}

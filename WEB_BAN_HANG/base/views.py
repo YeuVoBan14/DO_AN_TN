@@ -3,12 +3,15 @@ from .models import *
 from .cart import Cart
 from django.db.models import Q
 from django.contrib.auth.forms import UserCreationForm
-from .forms import MyUserCreationForm
+from .forms import MyUserCreationForm, UserForm
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect
 # Create your views here.
+def test(request):
+    return render(request, 'base/main/profile_new.html')
 def loginPage(request):
     page = 'login'
     if request.method == "POST":
@@ -55,26 +58,55 @@ def home(request):
     # search function
     if 'q' in request.GET:
         q = request.GET['q']
-        mutiple_q = Q(Q(cat__name__icontains=q)|
-                      Q(name__contains=q)|
-                      Q(suppiler__name__icontains=q))
+        mutiple_q = Q(  Q(cat__name__icontains=q)|
+                        Q(name__contains=q)|
+                        Q(suppiler__name__icontains=q)|
+                        Q(suppiler__name__icontains=q) )
         products = Product.objects.filter(mutiple_q)
     else:
         products = Product.objects.all()
     #pagination
-    page = Paginator(products, 2)
+    page = Paginator(products, 8)
     page_list = request.GET.get('page')
     page = page.get_page(page_list)
-    cats = Category.objects.exclude(parent=None).order_by('name')
-    context = {'products':products,'page':page, 'cats':cats}
+    cats = Category.objects.filter(parent__isnull=True).order_by('name')
+    suppilers = Suppiler.objects.all()
+    sale_prods = Product.objects.filter(is_sale=True)[:9]
+    context = {'products':products,'page':page, 'cats':cats, 'suppilers':suppilers, 'sale_prods': sale_prods}
     return render(request, 'base/main/home.html', context)
 
 def productPage(request, pk):
     product = Product.objects.get(id = pk)
-    # reviews = Review.objects.filter(product = product).order_by("-date")
-    context = {'product': product}
+    product_reviews = product.review_set.all()
+    product_review_len = len(product_reviews)
+    overall_score = sum(review.rating for review in product_reviews if review.rating is not None) / (len(product_reviews)) if product_reviews else 0
+    sale_prods = Product.objects.filter(is_sale=True)[:9]
+    if request.method == 'POST':
+        rating = request.POST.get('rating')
+        body = request.POST.get('body')
+
+        if not body:
+            messages.error(request, "Please provide a review body.")
+        else:
+            review = Review.objects.create(
+                rating=rating,
+                user=request.user,
+                product=product,
+                body=body
+            )
+            messages.success(request, "Review added successfully.")
+            return redirect('product',pk=product.id)
+    context = {'product': product, 'product_reviews':product_reviews, 'overall_score':overall_score, 'product_review_len': product_review_len, 'sale_prods':sale_prods}
     return render(request,'base/main/product.html',context)
 
+def deleteReview(request,pk):
+    review = Review.objects.get(id=pk)
+    if request.user != review.user:
+        return HttpResponse('Your are not allowed to do that!!')
+    if request.method == 'POST':
+        review.delete()
+        return redirect('product', pk=review.product.id)
+    return render(request, 'base/main/delete.html', {'obj': review})
 #-------------------------Cart----------------------------
 def cart(request):
     #Get the cart
@@ -103,6 +135,7 @@ def cartAdd(request):
 
         #Return a response
         response = JsonResponse({'qty': cart_quantity })
+        messages.success(request,'You have add a new item to the cart!')
         return response
 def cartDelete(request):
     cart = Cart(request)
@@ -111,6 +144,7 @@ def cartDelete(request):
         #call delete func
         cart.delete(product=product_id)
         #dont need this but use this to check to func is working
+        messages.success(request,'Product deleted!')
         response = JsonResponse({'product': product_id})
         return response
 def cartUpdate(request):
@@ -122,7 +156,26 @@ def cartUpdate(request):
         cart.update(product=product_id, quantity=product_qty)
         #dont need this but use this to check to func is working
         response = JsonResponse({'qty': product_qty})
+        messages.success(request,'Shopping cart have been updated!')
         return response
+    
+def userProfile(request, pk):
+    user = User.objects.get(id=pk)
+    form = UserForm(instance=user)
+    if request.method == 'POST':
+        form = UserForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            instance = form.instance
+            form = UserForm(instance=instance)
+            messages.success(request,"Your profile has been update")
+            return redirect('user-profile', pk=user.id)
+        else:
+            messages.error(request,"Please correct the error below.")
+            return redirect('user-profile', pk=user.id)
+    context = {'user': user, 'form': form}
+    return render(request, 'base/main/profile.html', context)
+
 
 
 

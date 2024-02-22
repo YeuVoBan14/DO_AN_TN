@@ -27,6 +27,13 @@ class User(AbstractUser):
     created = models.DateTimeField(auto_now_add=True)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
+    @property
+    def ImageURL(self):
+        try:
+            url = self.avatar.url
+        except:
+            url = ''
+        return url
 
     objects = CustomUserManager()
 class Category(models.Model):
@@ -49,7 +56,7 @@ class Product(models.Model):
     suppiler = models.ForeignKey(Suppiler,on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=0,blank=True,null=True)
     description = models.TextField(null=True,blank=True)
-    image = models.ImageField(null=True,blank=True,default="product.jpg",upload_to='product')
+    image = models.ImageField(null=True,blank=True,default="product/product.jpg",upload_to='product')
     updated = models.DateTimeField(auto_now=True)
     created = models.DateTimeField(auto_now_add=True)
     #Sale
@@ -64,27 +71,21 @@ class Product(models.Model):
         except:
             url = ''
         return url
-# class Cart(models.Model):
-#     user = models.ForeignKey(User,on_delete=models.CASCADE)
-#     product = models.ForeignKey(Product,on_delete=models.SET_NULL,null=True)
-#     quantity = models.PositiveIntegerField()
-#     def __str__(self):
-#         if self.user:
-#             return f'{self.user.first_name} {self.user.last_name}'
-#         else:
-#             return f'#{self.id}'
-class Message(models.Model):
+class Review(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE)
     product = models.ForeignKey(Product,on_delete=models.CASCADE)
-    body = models.TextField()
+    rating = models.SmallIntegerField(null=True,blank=True)
+    body = models.TextField(null=False, blank=False)
     updated = models.DateTimeField(auto_now=True)
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-updated', '-created']
+    def overallScore(self):
+        return float((self.rating or 0) / 5)
     def __str__(self):
         if self.user:
-            return f'{self.user.first_name} {self.user.last_name}: {self.body[:50]}'
+            return f'{self.user.username} : {self.body[:50]}'
         else:
             return f'#{self.id}'
 class Invoice(models.Model):
