@@ -54,8 +54,15 @@
                     <p>{{product.description | truncatechars:200}}</p>
                     <div class="product_count">
                         <label for="qty">Quantity:</label>
-                        <input type="text" name="qty" id="qty-cart" maxlength="12" title="Quantity:"
-                            class="input-text qty" value="1">
+                        <input type="text" name="qty" id="qty-cart" maxlength="12" title="Quantity:" class="input-text qty" value="1" oninput="
+                            var maxValue = parseInt('{{product.quantity}}');
+                            var inputValue = parseInt(this.value);
+                            if (inputValue > maxValue) {
+                                this.value = maxValue;
+                            } else if (inputValue < 1) {
+                                this.value = 1;
+                            }
+                        ">
                         <button
                             onclick="var result = document.getElementById('qty-cart'); var sst = result.value; if( !isNaN( sst ) &amp;&amp; sst < {{product.quantity}}) result.value++;return false;"
                             class="increase items-count" type="button"><i class="lnr lnr-chevron-up"></i></button>
@@ -117,22 +124,17 @@
                                         <h4>{{review.user.username}}</h4>
                                         <h5>{{review.created|timesince}}</h5>
                                         {% if review.rating > 0 %}
-                                        <i class="fa fa-star {% if review.rating  < 1 %} no-checked {% else %} checked {% endif %} "
-                                            id="check-star"></i>
-                                        <i class="fa fa-star {% if review.rating  < 2 %} no-checked {% else %} checked {% endif %} "
-                                            id="check-star"></i>
-                                        <i class="fa fa-star {% if review.rating  < 3 %} no-checked {% else %} checked {% endif %} "
-                                            id="check-star"></i>
-                                        <i class="fa fa-star {% if review.rating  < 4 %} no-checked {% else %} checked {% endif %} "
-                                            id="check-star"></i>
-                                        <i class="fa fa-star {% if review.rating  < 5 %} no-checked {% else %} checked {% endif %} "
-                                            id="check-star"></i>
+                                            <i class="fa fa-star{% if review.rating  < 1 %}-o{% else %}  {% endif %} " id="check-star"></i>
+                                            <i class="fa fa-star{% if review.rating  < 2 %}-o{% else %}  {% endif %} " id="check-star"></i>
+                                            <i class="fa fa-star{% if review.rating  < 3 %}-o{% else %}  {% endif %} " id="check-star"></i>
+                                            <i class="fa fa-star{% if review.rating  < 4 %}-o{% else %}  {% endif %} " id="check-star"></i>
+                                            <i class="fa fa-star{% if review.rating  < 5 %}-o{% else %}  {% endif %} " id="check-star"></i>
                                         {% else %}
-                                        <i class="fa fa-star " id="star"></i>
-                                        <i class="fa fa-star" id="star"></i>
-                                        <i class="fa fa-star" id="star"></i>
-                                        <i class="fa fa-star" id="star"></i>
-                                        <i class="fa fa-star" id="star"></i>
+                                            <i class="fa fa-star-o " id="star"></i>
+                                            <i class="fa fa-star-o" id="star"></i>
+                                            <i class="fa fa-star-o" id="star"></i>
+                                            <i class="fa fa-star-o" id="star"></i>
+                                            <i class="fa fa-star-o" id="star"></i>
                                         {% endif %}
                                         {% if request.user == review.user %}
                                         <a href="{% url 'delete-review' review.id %}" 
@@ -193,49 +195,7 @@
 </section>
 <!-- End Review Area -->
 <!-- Start related-product Area -->
-<section class="related-product-area">
-    <div class="container">
-            <div class="row justify-content-center">
-                    <div class="col-lg-6 text-center">
-                            <div class="section-title">
-                                    <h1>Deals of the Week</h1>
-                                    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut
-                                            labore et dolore
-                                            magna aliqua.</p>
-                            </div>
-                    </div>
-            </div>
-            <div class="row">
-                    <div class="col-lg-9">
-                            <div class="row">
-
-                                    {% for product in sale_prods %}
-                                    <div class="col-lg-4 col-md-4 col-sm-6 mb-20">
-                                            <div class="single-related-product d-flex">
-                                                    <a href="#"><img src="{{product.ImageURL}}" alt="" style="height: 70px; width: 70px;"></a>
-                                                    <div class="desc">
-                                                            <a href="{% url 'product' product.id %}" class="title">{{product.name}}</a>
-                                                            <div class="price">
-                                                                    <h6>${{product.sale_price}}</h6>
-                                                                    <h6 class="l-through">${{product.price_sell}}</h6>
-                                                            </div>
-                                                    </div>
-                                            </div>
-                                    </div>
-                                    {% endfor %}
-
-                            </div>
-                    </div>
-                    <div class="col-lg-3">
-                            <div class="ctg-right">
-                                    <a href="#" target="_blank">
-                                            <img class="img-fluid d-block mx-auto" src="{% static 'media/banner/deal.jpg' %}" alt="" />
-                                    </a>
-                            </div>
-                    </div>
-            </div>
-    </div>
-</section>
+{% include 'base/main/sale_prods.html' %}
 <!-- End related-product Area -->
 <!-- Start brand Area -->
 <section class="brand-area section_gap section_gap_bottom">

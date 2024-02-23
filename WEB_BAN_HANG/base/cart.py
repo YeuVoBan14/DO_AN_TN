@@ -15,11 +15,15 @@ class Cart():
         #make sure cart is available on all pages of site
         self.cart = cart
     def add(self, product, quantity):
+        product_old_qty = str(product.quantity)
         product_id = str(product.id)
         product_qty = str(quantity)
         #Logic
         if product_id in self.cart:
-            pass
+            if self.cart[product_id] + int(product_qty) > int(product_old_qty):
+                self.cart[product_id] = int(product_old_qty)
+            else:
+                self.cart[product_id] += int(product_qty)
         else:
             #self.cart[product_id] = {'price': str(product.price_sell)}
             self.cart[product_id] = int(product_qty)

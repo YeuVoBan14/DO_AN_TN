@@ -19,7 +19,6 @@
                 location.reload()
             },
             error: function (xhr, errmsg, err) {
-
             }
         });
     })
@@ -89,7 +88,7 @@
     var opacityChange = 1 / numIntervals;
 
     // Thiết lập interval để thay đổi opacity mỗi intervalDuration ms
-    var fadeEffect = setInterval(function() {
+    var fadeEffect = setInterval(function () {
         // Nếu opacity đã đạt đến 0, dừng interval và ẩn phần tử
         if (notification.style.opacity <= 0) {
             clearInterval(fadeEffect);

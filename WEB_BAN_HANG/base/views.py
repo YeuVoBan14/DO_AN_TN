@@ -11,7 +11,7 @@ from django.http import JsonResponse
 from django.http import HttpResponse, HttpResponseRedirect
 # Create your views here.
 def test(request):
-    return render(request, 'base/main/profile_new.html')
+    return render(request, 'base/main/cart_new.html')
 def loginPage(request):
     page = 'login'
     if request.method == "POST":
@@ -48,6 +48,7 @@ def registerPage(request):
             user.email = user.email.lower()
             user.save()
             login(request, user)
+            messages.success(request,  f"Account Created for {user.username}")
             return redirect('home')
         else:
             messages.error(request, 'An error occured during registration')
@@ -112,10 +113,11 @@ def cart(request):
     #Get the cart
     cart = Cart(request)
     cart_products = cart.get_prods()
+    sale_prods = Product.objects.filter(is_sale=True)[:9]
     quantities = cart.get_quants()
     totals = cart.cart_total()
     item_total = cart.item_total()
-    context = {'cart_products':cart_products, 'quantities':quantities, 'totals':totals, 'item_total':item_total }
+    context = {'cart_products':cart_products, 'quantities':quantities, 'totals':totals, 'item_total':item_total, 'sale_prods': sale_prods}
     return render(request, 'base/main/cart.html', context)
 
 def cartAdd(request):
@@ -162,6 +164,8 @@ def cartUpdate(request):
 def userProfile(request, pk):
     user = User.objects.get(id=pk)
     form = UserForm(instance=user)
+    reviews = user.review_set.all()
+    sale_prods = Product.objects.filter(is_sale=True)[:9]
     if request.method == 'POST':
         form = UserForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
@@ -173,7 +177,7 @@ def userProfile(request, pk):
         else:
             messages.error(request,"Please correct the error below.")
             return redirect('user-profile', pk=user.id)
-    context = {'user': user, 'form': form}
+    context = {'user': user, 'form': form, 'reviews': reviews, 'sale_prods':sale_prods}
     return render(request, 'base/main/profile.html', context)
 
 

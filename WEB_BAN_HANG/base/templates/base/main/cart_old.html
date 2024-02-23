@@ -1,0 +1,37 @@
+{% extends "main/main.html" %}
+{% block content %}
+<br><br><br><br><br><br><br><br>
+<h1>Cart</h1>
+<div class="container">
+    {% if cart_products %}
+            {% for product in cart_products %}
+            {{product}} // {{product.price_sell}} // is_sale:{{product.is_sale}}<br>
+            <div class="product_count">
+                {% for key, value in quantities.items %}
+                {% if key == product.id|slugify %}
+                <input type="text" name="qty" id="select{{product.id}}" maxlength="12" title="Quantity:" class="input-text qty" value="{{value}}">
+                {% endif %}
+                {% endfor %}
+                <button onclick="var result = document.getElementById('select{{product.id}}'); var sst = result.value; if( !isNaN( sst ) &amp;&amp; sst < {{product.quantity}}) result.value++;return false;" class="increase items-count" type="button"><i class="fa-solid fa-chevron-up"></i></button>
+                <button onclick="var result = document.getElementById('select{{product.id}}'); var sst = result.value; if( !isNaN( sst ) &amp;&amp; sst > 1 ) result.value--;return false;" class="reduced items-count" type="button"><i class="fa-solid fa-chevron-down"></i></button>
+            </div>
+            <button type="button" data-index="{{product.id}}" class="btn btn-secondary update-cart">Update</button>
+            <button type="button" data-index="{{product.id}}" class="btn btn-danger delete-cart-item">Delete</button>  
+            
+                {% for key,value in item_total.items %}
+                    {% if key == product.id|stringformat:"s" %}
+                        <span>{{value}}</span>
+                    {% endif %}
+                {% endfor %}
+            <hr>  
+            
+            {% endfor %}
+            <h3>Total: ${{totals}} </h3>
+            <h3>Total: {{item_total}} </h3>
+            <h3>{{cart_products}}</h3>
+            <h3>{{quantities}}</h3>
+    {% else %}
+    <p>Your shopping cart is empty.</p><br>
+    {% endif %}
+</div>
+{% endblock content %}
