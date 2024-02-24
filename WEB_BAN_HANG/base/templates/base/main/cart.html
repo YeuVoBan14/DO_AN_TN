@@ -144,30 +144,13 @@
     </div>
 </section>
 {% else %}
-    <h3 class="title_confirmation" style="color: #ffb900; margin: 10% 0; text-align:center;">Your shopping cart is empty.</h3>
+    <h3 class="title_confirmation" style="color: #ffb900; margin: 10% 0; text-align:center;">Your shopping cart is empty. <i class="fa fa-frown-o fa-lg" aria-hidden="true"></i></h3>
     {% endif %}
 <!-- End cart Area -->
 <!-- Start related-product Area -->
 {% include 'base/main/sale_prods.html' %}
 <!-- End related-product Area -->
 <!-- Start brand Area -->
-<section class="brand-area section_gap section_gap_bottom">
-    <div class="container">
-            <div class="row">
-                    <a class="col single-img" href="#">
-                            <img class="img-fluid d-block mx-auto" src="{% static 'media/banner/brands/1.png' %}" alt="">
-                    </a>
-                    <a class="col single-img" href="#">
-                            <img class="img-fluid d-block mx-auto" src="{% static 'media/banner/brands/2.png' %}" alt="">
-                    </a>
-                    <a class="col single-img" href="#">
-                            <img class="img-fluid d-block mx-auto" src="{% static 'media/banner/brands/3.png' %}" alt="">
-                    </a>
-                    <a class="col single-img" href="#">
-                            <img class="img-fluid d-block mx-auto" src="{% static 'media/banner/brands/4.png' %}" alt="">
-                    </a>
-            </div>
-    </div>
-</section>
+{% include 'base/main/brands.html' %}
 <!-- End brand Area -->
 {% endblock content %}

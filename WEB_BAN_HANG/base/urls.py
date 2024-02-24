@@ -18,6 +18,12 @@ urlpatterns = [
 
     path('profile/<str:pk>', views.userProfile, name="user-profile"),
 
+
+    # path for admin
+    path('super',views.adminHome,name="adminHome"), 
+    path('super/login/',views.adminLogin,name="admin_login"),
+    path('super/logout/',views.adminLogout,name="admin_logout"),
+
     path('test', views.test, name="test")
 
 ]

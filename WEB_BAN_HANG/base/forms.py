@@ -6,6 +6,7 @@ GENDER_CHOICES = (
     (True, 'Male'),
     (False, 'Female'),
 )
+#for register new user(customer)
 class MyUserCreationForm(UserCreationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':"Username"}))
     email = forms.CharField(widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':"Email"}))
@@ -14,6 +15,7 @@ class MyUserCreationForm(UserCreationForm):
     class Meta:
         model = User
         fields = ['username', 'email', 'password1', 'password2']
+#for edit user(customer)
 class UserForm(ModelForm):
     birth = forms.DateField(widget=forms.DateInput(attrs= {'type':'date', 'class':'form-control form-inline','placeholder':'Select date of birth'}))
     gender = forms.ChoiceField(choices=GENDER_CHOICES, widget=forms.RadioSelect(attrs={'class': 'form-inline', 'style': 'margin-left: 10px;'}))

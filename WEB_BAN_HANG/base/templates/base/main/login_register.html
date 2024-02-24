@@ -7,10 +7,22 @@
     <div class="container">
         <div class="breadcrumb-banner d-flex flex-wrap align-items-center justify-content-end">
             <div class="col-first" style="max-width: 500px">
-                <h1 style="text-transform: uppercase;">Login/Register</h1>
+                <h1 style="text-transform: uppercase;">
+                    {% if page == 'login' %}
+                    Login
+                    {% else %}
+                    Register
+                    {% endif %}
+                </h1>
                 <nav class="d-flex align-items-center">
                     <a href="{% url 'home' %}">Home<span class="lnr lnr-arrow-right"></span></a>
-                    <a href="#">login/register</a>
+                    <a href="#">
+                        {% if page == 'login' %}
+                        Login
+                        {% else %}
+                        Register
+                        {% endif %}
+                    </a>
                 </nav>
             </div>
         </div>

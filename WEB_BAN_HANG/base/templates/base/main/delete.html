@@ -23,7 +23,10 @@
         <form class="form" action="" method="POST">
             {% csrf_token %}
         <h3 class="title_confirmation" style="color: red;">Are you sure you want to delete this "{{obj}}!!"</h3>
-        <input type="submit" href="#" class="genric-btn danger e-large" style="font-size: 16px; position: absolute; left: 50%; transform: translateX(-50%);" value="Confirm">
+        <div style="font-size: 16px; position: absolute; left: 50%; transform: translateX(-50%);">
+        <a href="{{request.META.HTTP_REFERER}}" class="genric-btn primary e-large">Cancel</a>
+        <input type="submit" class="genric-btn danger e-large"  value="Confirm">
+        </div>
         </form>
     </div>
 </section>

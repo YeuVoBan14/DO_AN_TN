@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.http import HttpResponse, HttpResponseRedirect
+from django.contrib.auth.decorators import login_required
 # Create your views here.
 def test(request):
     return render(request, 'base/main/cart_new.html')
@@ -27,7 +28,7 @@ def loginPage(request):
             login(request, user)
             return redirect('home')
         else:
-            messages.error(request,'Invalid Password or Email ID')
+            messages.error(request,'Invalid Password or Email')
     context = {'page': page}
     return render(request,'base/main/login_register.html', context)
 
@@ -179,6 +180,64 @@ def userProfile(request, pk):
             return redirect('user-profile', pk=user.id)
     context = {'user': user, 'form': form, 'reviews': reviews, 'sale_prods':sale_prods}
     return render(request, 'base/main/profile.html', context)
+
+###################### ADMIN SITE #########################
+def adminLogin(request):
+    try:
+        if request.user.is_authenticated:
+            return redirect('adminHome')
+        
+        if request.method == 'POST':
+            email = request.POST.get('email').lower()
+            password = request.POST.get('password')
+            
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                messages.error(request, "User does not exist")
+                return render(request, 'base/admin/login.html')
+                
+            user = authenticate(request, email=email, password=password)
+            if user is not None and user.is_superuser:
+                login(request, user)
+                return redirect('adminHome')
+            else:
+                messages.error(request, 'You a not a super user')
+                return render(request, 'base/admin/login.html')
+        
+        return render(request, 'base/admin/login.html')
+    except Exception as e:
+        print(e)
+
+def adminLogout(request):
+    logout(request)
+    return redirect('admin_login')
+
+@login_required(login_url='/super/login/')
+def adminHome(request):
+    products = Product.objects.all().order_by('name')
+    context = {'products': products}
+    return render(request, 'base/admin/home.html', context)
+# CRUD operations on Product model
+# @admin_only
+# def addProduct(request):
+#     form = AddProductForm()
+#     if request.method == 'POST':
+#         form = AddProductForm(data=request.POST or None, files=request.FILES or None)
+#         if form.is_valid():
+#             product = form.save(commit=False)
+#             # Assign the current logged in user to be the owner of this new product
+#             product.owner = request.user
+#             product.save()
+#             messages.success(request, f"{product.name} has been added!")
+#             return redirect('products')
+    
+#     context={'form':form}
+#     return render(request,'base/admin/add_product.html',context) 
+
+            
+
+        
 
 
 

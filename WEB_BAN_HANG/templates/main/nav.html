@@ -4,7 +4,7 @@
         <nav class="navbar navbar-expand-lg navbar-light main_box">
             <div class="container">
                 <!-- Brand and toggle get grouped for better mobile display -->
-                <a class="navbar-brand logo_h" href="{% url 'home' %}"><img src="{% static "media/banner/logo.png" %}"
+                <a class="navbar-brand logo_h" href="{% url 'home' %}"><img src="{% static "media/banner/brand/logo.png" %}"
                         alt=""></a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse"
                     data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
@@ -29,6 +29,8 @@
                             <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button"
                                 aria-haspopup="true" aria-expanded="false">Brands</a>
                             <ul class="dropdown-menu">
+                                <li class="nav-item"><a class="nav-link"
+                                    href="{% url 'home' %}">All</a></li>
                                 {% for suppiler in suppilers %}
                                 <li class="nav-item"><a class="nav-link"
                                         href="{% url 'home' %}?q={{suppiler.name}}">{{suppiler.name}}</a></li>
@@ -39,6 +41,8 @@
                             <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button"
                                 aria-haspopup="true" aria-expanded="false">Categories</a>
                             <ul class="dropdown-menu">
+                                <li class="nav-item"><a class="nav-link"
+                                    href="{% url 'home' %}">All</a></li>
                                 {% for cat in cats %}
                                 <li class="nav-item"><a class="nav-link"
                                         href="{% url 'home' %}?q={{cat.name}}">{{cat.name}}</a></li>
