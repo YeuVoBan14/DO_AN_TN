@@ -70,10 +70,12 @@
                             onclick="var result = document.getElementById('qty-cart'); var sst = result.value; if( !isNaN( sst ) &amp;&amp; sst > 1 ) result.value--;return false;"
                             class="reduced items-count" type="button"><i class="lnr lnr-chevron-down"></i></i></button>
                     </div>
+                    {% if product.quantity > 0 %}
                     <div class="card_area d-flex align-items-center">
                         <button class="primary-btn" type="button" value="{{product.id}}" id="add-cart"
                             style="border: none;">Add to Cart</button>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

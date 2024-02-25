@@ -3,7 +3,7 @@ from .models import *
 from .cart import Cart
 from django.db.models import Q
 from django.contrib.auth.forms import UserCreationForm
-from .forms import MyUserCreationForm, UserForm
+from .forms import *
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -69,6 +69,7 @@ def home(request):
         products = Product.objects.all()
     #pagination
     page = Paginator(products, 8)
+    #get ?page= in the template
     page_list = request.GET.get('page')
     page = page.get_page(page_list)
     cats = Category.objects.filter(parent__isnull=True).order_by('name')
@@ -107,6 +108,7 @@ def deleteReview(request,pk):
         return HttpResponse('Your are not allowed to do that!!')
     if request.method == 'POST':
         review.delete()
+        messages.warning(request,'The review has been deleted!')
         return redirect('product', pk=review.product.id)
     return render(request, 'base/main/delete.html', {'obj': review})
 #-------------------------Cart----------------------------
@@ -215,9 +217,89 @@ def adminLogout(request):
 
 @login_required(login_url='/super/login/')
 def adminHome(request):
-    products = Product.objects.all().order_by('name')
-    context = {'products': products}
-    return render(request, 'base/admin/home.html', context)
+    context = {}
+    return render(request, 'base/admin/home.html',context)
+def productAdmin(request):
+    if 'q' in request.GET:
+        q = request.GET['q']
+        mutiple_q = Q(  Q(cat__name__icontains=q)|
+                        Q(name__contains=q)|
+                        Q(suppiler__name__icontains=q)|
+                        Q(suppiler__name__icontains=q) )
+        products = Product.objects.filter(mutiple_q)
+    else:
+        products = Product.objects.all()
+    page = Paginator(products, 4)
+    page_list = request.GET.get('page')
+    page = page.get_page(page_list)
+    context = {'products': products, 'page': page}
+    return render(request, 'base/admin/product.html', context)
+## Product
+@login_required(login_url='/super/login/')
+def addProduct(request):
+    form = CreateProductForm()
+    if request.method == 'POST':
+        form = CreateProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            product = form.save(commit=False)
+            if product.price_sell < product.price_im:
+                messages.error(request, "Sale price cannot be lower than import price.")
+                return redirect("addProduct")
+            elif product.sale_price < product.price_im:
+                messages.warning(request, "The sale price is less than the import price!")
+                return redirect("addProduct")
+            elif product.sale_price > product.price_sell:
+                messages.error(request, "Sale price cannot be higher than sell price.")
+                return redirect("addProduct")
+            elif product.sale_price and not product.is_sale:
+                messages.error(request, "If there is a sale price, please check the 'is sale' option.")
+                return redirect("addProduct")
+            else:
+                product.save()
+                messages.success(request, "Successfully added a new product!")
+                return redirect("productAdmin")
+    context = { "form": form }
+    return render(request, 'base/admin/create-product.html', context)
+@login_required(login_url='/super/login/')
+def updateProduct(request, pk):
+    product = Product.objects.get(id=pk)
+    form = UpdateProductForm(instance=product)
+    if request.method == 'POST':
+        form = UpdateProductForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            product = form.save(commit=False)
+            if product.price_sell < product.price_im:
+                messages.error(request, "Sale price cannot be lower than import price.")
+                return redirect ("updateProduct", pk=product.id)
+            elif product.sale_price < product.price_im:
+                messages.warning(request, "The sale price is less than the import price!")
+                return redirect ("updateProduct", pk=product.id)
+            elif product.sale_price > product.price_sell:
+                messages.error(request, "Sale price cannot be higher than sell price.")
+                return redirect ("updateProduct", pk=product.id)
+            elif product.sale_price and not product.is_sale:
+                messages.error(request, "If there is a sale price, please check the 'is sale' option.")
+                return redirect ("updateProduct", pk=product.id)
+            else:
+                product.save()
+                instance = form.instance
+                form = UpdateProductForm(instance=instance)
+                messages.success(request,"Your product has been updated")
+                return redirect("productAdmin")
+        else:
+            messages.error(request,"Please correct the error below.")
+            return redirect('updateProduct', pk=product.id)
+    context = {'form':form}
+    return render(request, 'base/admin/update-product.html', context)
+@login_required(login_url='/super/login/')
+def deleteProduct(request, pk):
+    product = Product.objects.get(id=pk)
+    if request.method == 'POST':
+        product.delete()
+        messages.warning(request,'The selected product has been deleted!')
+        return redirect('productAdmin')
+    return render(request,'base/admin/delete-product.html',{'obj': product})
+
 # CRUD operations on Product model
 # @admin_only
 # def addProduct(request):

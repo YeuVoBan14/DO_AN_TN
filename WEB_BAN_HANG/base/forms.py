@@ -1,6 +1,6 @@
 from django.forms import ModelForm
 from django.contrib.auth.forms import UserCreationForm
-from .models import User
+from .models import *
 from django import forms
 GENDER_CHOICES = (
     (True, 'Male'),
@@ -36,7 +36,15 @@ class UserForm(ModelForm):
 
         self.fields['last_name'].widget.attrs['class'] = 'form-control'
         self.fields['last_name'].widget.attrs['placeholder'] = 'Last Name'
-
+# for add a new product
+class CreateProductForm(ModelForm):
+    class Meta:
+        model = Product
+        fields = ['name', 'cat', 'price_im', 'price_sell', 'suppiler', 'description', 'is_sale', 'sale_price', 'image']
+class UpdateProductForm(ModelForm):
+    class Meta:
+        model = Product
+        fields = ['name', 'cat', 'price_im', 'price_sell', 'suppiler', 'quantity', 'description', 'is_sale', 'sale_price', 'image']
             
         
 

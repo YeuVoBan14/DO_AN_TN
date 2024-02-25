@@ -24,6 +24,11 @@ urlpatterns = [
     path('super/login/',views.adminLogin,name="admin_login"),
     path('super/logout/',views.adminLogout,name="admin_logout"),
 
+    path('super/product/', views.productAdmin, name="productAdmin"),
+    path('super/add-product/', views.addProduct, name="addProduct"),
+    path('super/update-product/<str:pk>', views.updateProduct, name="updateProduct"),
+    path('super/delete-product/<str:pk>', views.deleteProduct, name="deleteProduct"),
+
     path('test', views.test, name="test")
 
 ]
