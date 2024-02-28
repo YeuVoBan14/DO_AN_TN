@@ -10,9 +10,14 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
+from django.views.generic import ListView
+from django.views.generic.edit import (
+    CreateView, UpdateView
+)
+
 # Create your views here.
 def test(request):
-    return render(request, 'base/main/cart_new.html')
+    return render(request, 'base/admin/login.html')
 def loginPage(request):
     page = 'login'
     if request.method == "POST":
@@ -217,9 +222,13 @@ def adminLogout(request):
 
 @login_required(login_url='/super/login/')
 def adminHome(request):
-    context = {}
+    customers = User.objects.filter(is_superuser=False)
+    context = {'customers':customers}
     return render(request, 'base/admin/home.html',context)
+## Product
+@login_required(login_url='/super/login/')
 def productAdmin(request):
+    pageView = 'read'
     if 'q' in request.GET:
         q = request.GET['q']
         mutiple_q = Q(  Q(cat__name__icontains=q)|
@@ -232,11 +241,12 @@ def productAdmin(request):
     page = Paginator(products, 4)
     page_list = request.GET.get('page')
     page = page.get_page(page_list)
-    context = {'products': products, 'page': page}
+
+    context = {'products': products, 'page': page, 'pageView':pageView}
     return render(request, 'base/admin/product.html', context)
-## Product
 @login_required(login_url='/super/login/')
 def addProduct(request):
+    pageView = 'add'
     form = CreateProductForm()
     if request.method == 'POST':
         form = CreateProductForm(request.POST, request.FILES)
@@ -258,10 +268,11 @@ def addProduct(request):
                 product.save()
                 messages.success(request, "Successfully added a new product!")
                 return redirect("productAdmin")
-    context = { "form": form }
-    return render(request, 'base/admin/create-product.html', context)
+    context = { "form": form, 'pageView': pageView }
+    return render(request, 'base/admin/product.html', context)
 @login_required(login_url='/super/login/')
 def updateProduct(request, pk):
+    pageView = 'edit'
     product = Product.objects.get(id=pk)
     form = UpdateProductForm(instance=product)
     if request.method == 'POST':
@@ -289,38 +300,168 @@ def updateProduct(request, pk):
         else:
             messages.error(request,"Please correct the error below.")
             return redirect('updateProduct', pk=product.id)
-    context = {'form':form}
-    return render(request, 'base/admin/update-product.html', context)
+    context = {'form':form, 'pageView':pageView}
+    return render(request, 'base/admin/product.html', context)
 @login_required(login_url='/super/login/')
 def deleteProduct(request, pk):
+    pageView = 'delete'
     product = Product.objects.get(id=pk)
     if request.method == 'POST':
         product.delete()
         messages.warning(request,'The selected product has been deleted!')
         return redirect('productAdmin')
-    return render(request,'base/admin/delete-product.html',{'obj': product})
+    return render(request,'base/admin/product.html',{'obj': product, 'pageView':pageView})
 
-# CRUD operations on Product model
-# @admin_only
-# def addProduct(request):
-#     form = AddProductForm()
-#     if request.method == 'POST':
-#         form = AddProductForm(data=request.POST or None, files=request.FILES or None)
-#         if form.is_valid():
-#             product = form.save(commit=False)
-#             # Assign the current logged in user to be the owner of this new product
-#             product.owner = request.user
-#             product.save()
-#             messages.success(request, f"{product.name} has been added!")
-#             return redirect('products')
-    
-#     context={'form':form}
-#     return render(request,'base/admin/add_product.html',context) 
+## Suppiler
+@login_required(login_url='/super/login/')
+def suppilerAdmin(request):
+    pageView = 'read'
+    if 'q' in request.GET:
+        q = request.GET['q']
+        mutiple_q = Q(  Q(name__contains=q)|
+                        Q(phone__icontains=q)|
+                        Q(address__icontains=q) )
+        suppilers = Suppiler.objects.filter(mutiple_q)
+    else:
+        suppilers = Suppiler.objects.all()
+    page = Paginator(suppilers, 4)
+    page_list = request.GET.get('page')
+    page = page.get_page(page_list)
 
-            
+    context = {'suppilers': suppilers,'page':page, 'pageView':pageView}
+    return render(request, 'base/admin/suppiler.html', context)
+@login_required(login_url='/super/login/')
+def addSuppiler(request):
+    pageView = 'add'
+    form = CreateSuppilerForm()
+    if request.method == 'POST':
+        form = CreateSuppilerForm(request.POST)
+        if form.is_valid():
+            suppiler = form.save(commit=False)
+            categories = form.cleaned_data['cat']
+            if len(suppiler.phone) != 10:
+                messages.error(request, "Phone number must have exactly 10 digits.")
+                return redirect("addSuppiler")
+            else:
+                suppiler.save()
+                suppiler.cat.set(categories)
+                suppiler.save()
+                messages.success(request, "Successfully added a new company!")
+                return redirect("suppilerAdmin")
+    context = { "form": form, 'pageView': pageView }
+    return render(request, 'base/admin/suppiler.html', context)
+@login_required(login_url='/super/login/')
+def updateSuppiler(request, pk):
+    pageView = 'edit'
+    suppiler = Suppiler.objects.get(id=pk)
+    form = UpdateSuppilerForm(instance=suppiler)
+    if request.method == 'POST':
+        form = UpdateSuppilerForm(request.POST, instance=suppiler)
+        if form.is_valid():
+            product = form.save(commit=False)
+            categories = form.cleaned_data['cat']
+            if len(suppiler.phone) != 10:
+                messages.error(request, "Phone number must have exactly 10 digits.")
+                return redirect("addSuppiler")
+            else:
+                suppiler.save()
+                suppiler.cat.set(categories)
+                suppiler.save()
+                instance = form.instance
+                form = UpdateSuppilerForm(instance=instance)
+                messages.success(request,"Your suppiler has been updated")
+                return redirect("suppilerAdmin")
+        else:
+            messages.error(request,"Please correct the error below.")
+            return redirect('updateSuppiler', pk=product.id)
+    context = {'form':form, 'pageView':pageView}
+    return render(request, 'base/admin/suppiler.html', context)
+@login_required(login_url='/super/login/')
+def deleteSuppiler(request, pk):
+    pageView = 'delete'
+    suppiler = Suppiler.objects.get(id=pk)
+    if request.method == 'POST':
+        suppiler.delete()
+        messages.warning(request,'The selected suppiler has been deleted!')
+        return redirect('suppilerAdmin')
+    return render(request,'base/admin/product.html',{'obj': suppiler, 'pageView':pageView})
+#------------------------------CATEGORIES----------------
+@login_required(login_url="/super/login/")
+def categoryAdmin(request):
+    pageView = 'read'
+    if 'q' in request.GET:
+        q = request.GET['q']
+        mutiple_q = Q( Q(name__contains=q) )
+        categories = Category.objects.filter(mutiple_q)
+    else:
+        categories = Category.objects.all()
+    page = Paginator(categories, 4)
+    page_list = request.GET.get('page')
+    page = page.get_page(page_list)
 
-        
+    context = {'categories': categories,'page':page, 'pageView':pageView}
+    return render(request, 'base/admin/category.html', context)
+@login_required(login_url="/super/login/")
+def addCategory(request):
+    pageView = 'add'
+    form = CreateCategoryForm()
+    if request.method == 'POST':
+        form = CreateCategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Successfully added a new category!")
+            return redirect("categoryAdmin")
+    context = { "form": form, 'pageView': pageView }
+    return render(request, 'base/admin/category.html', context)
+@login_required(login_url='/super/login/')
+def updateCategory(request, pk):
+    pageView = 'edit'
+    category = Category.objects.get(id=pk)
+    form = UpdateCategoryForm(instance=category)
+    if request.method == 'POST':
+        form = UpdateCategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            instance = form.instance
+            form = UpdateCategoryForm(instance=instance)
+            messages.success(request,"Your category has been updated")
+            return redirect("categoryAdmin")
+        else:
+            messages.error(request,"Please correct the error below.")
+            return redirect('updateCategory', pk=category.id)
+    context = {'form':form, 'pageView':pageView}
+    return render(request, 'base/admin/category.html', context)
+@login_required(login_url='/super/login/')
+def deleteCategory(request, pk):
+    pageView = 'delete'
+    category = Category.objects.get(id=pk)
+    if request.method == 'POST':
+        category.delete()
+        messages.warning(request,'The selected category has been deleted!')
+        return redirect('categoryAdmin')
+    return render(request,'base/admin/product.html',{'obj': category, 'pageView':pageView})
+#----------------------------Invoice------------------------------
+@login_required(login_url='/super/login/')
+def invoiceAdmin(request):
+    invoices = Invoice.objects.all()
+    context = {'invoices':invoices}
+    return render(request, 'base/admin/invoice.html',context)
+def add_invoice(request):
+    if request.method == 'POST':
+        invoice_form = InvoiceForm(request.POST)
+        item_formset = InvoiceItemFormSet(request.POST)
+        if invoice_form.is_valid() and item_formset.is_valid():
+            invoice = invoice_form.save()
+            items = item_formset.save(commit=False)
+            for item in items:
+                item.invoice = invoice
+                item.save()
+            return redirect('invoice_detail', pk=invoice.pk)  # Chuyển hướng đến trang chi tiết hóa đơn
+    else:
+        invoice_form = InvoiceForm()
+        item_formset = InvoiceItemFormSet()
+    return render(request, 'base/admin/add_invoice.html', {'invoice_form': invoice_form, 'item_formset': item_formset})
 
-
-
-
+def invoice_detail(request, pk):
+    invoice = Invoice.objects.get(pk=pk)
+    return render(request, 'base/admin/invoice_detail.html', {'invoice': invoice})

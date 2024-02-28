@@ -1,0 +1,5 @@
+<h1>Invocie List</h1>
+<button><a href="{% url 'add_invoice' %}" >Add new</a></button><br>
+{% for invoice in invoices %}
+{{invoice.id}} - {{invoice.suppiler}}<br>
+{% endfor %}

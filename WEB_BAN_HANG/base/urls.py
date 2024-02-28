@@ -1,6 +1,5 @@
 from django.urls import path
 from . import views
-
 urlpatterns = [
     path('login/', views.loginPage, name="login"),
     path('logout/', views.logoutUser, name="logout"),
@@ -28,6 +27,20 @@ urlpatterns = [
     path('super/add-product/', views.addProduct, name="addProduct"),
     path('super/update-product/<str:pk>', views.updateProduct, name="updateProduct"),
     path('super/delete-product/<str:pk>', views.deleteProduct, name="deleteProduct"),
+
+    path('super/suppiler/', views.suppilerAdmin, name="suppilerAdmin"),
+    path('super/add-suppiler/', views.addSuppiler, name="addSuppiler"),
+    path('super/update-suppiler/<str:pk>', views.updateSuppiler, name="updateSuppiler"),
+    path('super/delete-suppiler/<str:pk>', views.deleteSuppiler, name="deleteSuppiler"),
+
+    path('super/category/', views.categoryAdmin, name="categoryAdmin"),
+    path('super/add-category/', views.addCategory, name="addCategory"),
+    path('super/update-category/<str:pk>', views.updateCategory, name="updateCategory"),
+    path('super/delete-category/<str:pk>', views.deleteCategory, name="deleteCategory"),
+
+    path('super/invoice/', views.invoiceAdmin, name="InvoiceAdmin"),
+    path('super/add-invoice/', views.add_invoice, name='add_invoice'),
+    path('super/invoice/<int:pk>/', views.invoice_detail, name='invoice_detail'),
 
     path('test', views.test, name="test")
 

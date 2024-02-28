@@ -1,8 +1,0 @@
-<form class="form" action="" method="POST">
-    {% csrf_token %}
-<h3>Are you sure you want to delete this "{{obj}}!!"</h3>
-<div>
-<a href="{{request.META.HTTP_REFERER}}">Cancel</a>
-<input type="submit" value="Confirm">
-</div>
-</form>
