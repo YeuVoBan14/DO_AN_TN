@@ -114,17 +114,9 @@ class InvoiceForm(ModelForm):
     class Meta:
         model = Invoice
         fields = ['suppiler']
-class InvoiceItemForm(ModelForm):
-    class Meta:
-        model = InvoiceItem
-        fields = ['product', 'quantity']
-InvoiceItemFormSet = forms.inlineformset_factory(
-    Invoice,  # Mô hình cha
-    InvoiceItem,  # Mô hình con
-    form=InvoiceItemForm,  # Form cho mỗi mục
-    extra=10,  # Số lượng mục mặc định trong FormSet
-    can_delete=True  # Cho phép xóa mục
-)
+        widgets ={
+            'suppiler': forms.Select(attrs={'class': 'block w-full mt-1 text-sm dark:text-gray-300 dark:border-gray-600 dark:bg-gray-700 form-select focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:focus:shadow-outline-gray'}),
+        }
 
 
         

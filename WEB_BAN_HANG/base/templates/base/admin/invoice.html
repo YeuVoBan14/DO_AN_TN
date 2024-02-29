@@ -1,5 +1,135 @@
-<h1>Invocie List</h1>
-<button><a href="{% url 'add_invoice' %}" >Add new</a></button><br>
-{% for invoice in invoices %}
-{{invoice.id}} - {{invoice.suppiler}}<br>
-{% endfor %}
+{% extends "admin/main.html" %}
+{% block content %}
+<main class="h-full pb-16 overflow-y-auto">
+    <div class="container grid px-6 mx-auto">
+    
+    {% if pageView == 'read' %}
+    <h2 class="my-6 text-2xl font-semibold text-gray-700 dark:text-gray-200">Invoices</h2>
+    {% endif %}
+    
+    <div style="margin: 10px 0">
+        {% if pageView == 'read' %}
+        <button class="px-5 py-3 font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
+            <a href="{% url 'select_suppiler' %}">Create Suppiler</a>
+        </button>
+        {% else %}
+        <button class="px-5 py-3 font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
+            <a href="{% url 'InvoiceAdmin' %}">Back to Invoices</a>
+        </button>
+        {% endif %}
+    </div>
+
+    {% if pageView == 'read' %}
+      <div class="w-full overflow-hidden rounded-lg shadow-xs">
+        <div class="w-full overflow-x-auto">
+            <table class="w-full whitespace-no-wrap">
+                <thead>
+                <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800">
+                    <th class="px-4 py-3">ID</th>
+                    <th class="px-4 py-3">Suppiler</th>
+                    <th class="px-4 py-3">Quantity</th>
+                    <th class="px-4 py-3">Status</th>
+                    <th class="px-4 py-3">Actions</th>
+                </tr>
+                </thead>
+                {% for invoice in page.object_list %}
+                <tbody class="bg-white divide-y dark:divide-gray-700 dark:bg-gray-800">
+                <tr class="text-gray-700 dark:text-gray-400">
+                    <td class="px-4 py-3">
+                    <div class="flex items-center text-sm">
+                        <!-- Avatar with inset shadow -->
+                        <div class="relative hidden w-8 h-8 mr-3 rounded-full md:block">
+                        <div class="absolute inset-0 rounded-full shadow-inner" aria-hidden="true"></div>
+                        <p class="font-semibold">#{{invoice.id}}</p>
+                        </div>
+                    </div>
+                    </td>
+                    <td class="px-4 py-3">{{invoice.suppiler}}</td>
+                    <td class="px-4 py-3">{{invoice.invoiceitem_set.all|length}}</td>
+                    <td class="px-4 py-3 text-xs">
+                        {% if invoice.status == 1 %}
+                        <span class="px-2 py-1 font-semibold leading-tight text-red-700 bg-red-100 rounded-full dark:text-red-100 dark:bg-red-700">
+                            Pending</span>
+                        {% elif invoice.status == 2 %}
+                        <span class="px-2 py-1 font-semibold leading-tight text-green-700 bg-green-100 rounded-full dark:bg-green-700 dark:text-green-100">
+                            Approved</span>
+                        </td>
+                        {% elif invoice.status == 3 %}
+                        <span class="px-2 py-1 font-semibold leading-tight text-red-700 bg-red-100 rounded-full dark:text-red-100 dark:bg-red-700">
+                            Cancel</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3">
+                    <div class="flex items-center space-x-4 text-sm">
+                        <button class="flex items-center justify-between px-2 py-2 text-sm font-medium leading-5 text-purple-600 rounded-lg dark:text-gray-400 focus:outline-none focus:shadow-outline-gray"
+                        aria-label="Edit"><a href="">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg></a>                          
+                        </button>
+                        <button class="flex items-center justify-between px-2 py-2 text-sm font-medium leading-5 text-purple-600 rounded-lg dark:text-gray-400 focus:outline-none focus:shadow-outline-gray"
+                        aria-label="Edit"><a href="">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                        </svg></a>                          
+                        </button>
+                    </div>
+                    </td>
+                </tr>
+                </tbody>
+                {% endfor %}
+            </table>
+        </div>
+        <div
+          class="grid px-4 py-3 text-xs font-semibold tracking-wide text-gray-500 uppercase border-t dark:border-gray-700 bg-gray-50 sm:grid-cols-9 dark:text-gray-400 dark:bg-gray-800"
+        >
+          <span class="flex items-center col-span-3">Page: {{page.number}} of {{page.paginator.num_pages}}</span>
+          <span class="col-span-2"></span>
+          <!-- Pagination -->
+          <span class="flex col-span-4 mt-2 sm:mt-auto sm:justify-end">
+            <nav aria-label="Table navigation">
+              <ul class="inline-flex items-center">
+                {% if page.has_previous %}
+                <li>
+                  <a class="px-3 py-1 rounded-md rounded-l-lg focus:outline-none focus:shadow-outline-purple" aria-label="Previous"
+                  href="{% url 'InvoiceAdmin' %}?page={{ page.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
+                  </svg>                  
+                  </a>
+                </li>
+                {% endif %}
+                {% for num_page in page.paginator.page_range %}
+                    {% if num_page == 1 or num_page == page.paginator.num_pages or num_page == page.number or num_page == page.number|add:"-1" or num_page == page.number|add:"-2" or num_page == page.number|add:"1" or num_page == page.number|add:"2" %}
+                        {% if page.number == num_page %}
+                        <li><a class="px-3 py-1 text-white transition-colors duration-150 bg-purple-600 border border-r-0 border-purple-600 rounded-md focus:outline-none focus:shadow-outline-purple"
+                        href="{% url 'InvoiceAdmin' %}?page={{num_page}}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{num_page}}</a>
+                        </li>
+                        {% else %}
+                        <li><a class="px-3 py-1 rounded-md focus:outline-none focus:shadow-outline-purple"
+                        href="{% url 'InvoiceAdmin' %}?page={{num_page}}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{num_page}}</a>
+                        </li>
+                        {% endif %}
+                    {% elif num_page == page.paginator.num_pages|add:"-1" or num_page == 2 %}
+                        <li><span class="px-3 py-1">...</span></li>
+                    {% endif %}
+                {% endfor %}
+                {% if page.has_next %}
+                <li><a class="px-3 py-1 rounded-md rounded-r-lg focus:outline-none focus:shadow-outline-purple" aria-label="Next"
+                href="{% url 'InvoiceAdmin' %}?page={{ page.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5" />
+                  </svg>                  
+                </a>
+                </li>
+                {% endif %}
+              </ul>
+            </nav>
+          </span>
+        </div>
+      </div>
+    {% endif %}
+
+    </div>
+</main>
+{% endblock content %}

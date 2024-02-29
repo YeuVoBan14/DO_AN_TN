@@ -1,36 +1,16 @@
-{% extends "admin/main.html" %}
-{% block content %}
-<h1>product</h1>
-<button class='btn btn-outline-primary'><a href="{% url 'addProduct' %}">create product</a></button>
-{% for product in page.object_list %}
-<span>{{product.name}}</span>//
-<span>{{product.price_sell}}</span>
-<button class="btn btn-outline-primary" ><a href="{% url 'updateProduct' product.id %}">edit</a></button>
-<button class="btn btn-danger" ><a href="{% url 'deleteProduct' product.id %}">delete</a></button>
-<hr>
-{% endfor %}
-<div class="pagination justify-content-center">
-    <nav aria-label="Page navigation example">
-        <span>Page:{{page.number}}/{{page.paginator.num_pages}}</span>
-        <ul class="pagination">
-            {% if page.has_previous %}
-            <li class="page-item"><a class="page-link" href="{% url 'productAdmin' %}?page={{ page.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Previous</a></li>
-            {% endif %}
-            {% for num_page in page.paginator.page_range %}
-            {% if num_page == 1 or num_page == page.paginator.num_pages or num_page == page.number or num_page == page.number|add:"-1" or num_page == page.number|add:"-2" or num_page == page.number|add:"1" or num_page == page.number|add:"2" %}
-                {% if page.number == num_page %}
-                <li class="page-item active" aria-current="page"><a class="page-link" href="{% url 'productAdmin' %}?page={{num_page}}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{num_page}}</a></li>
-                {% else %}
-                <li class="page-item" aria-current="page"><a class="page-link" href="{% url 'productAdmin' %}?page={{num_page}}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{num_page}}</a></li>
-                {% endif %}
-            {% elif num_page == page.paginator.num_pages|add:"-1" or num_page == 2 %}
-                <a href="#" class="dot-dot">...</a>
-            {% endif %}
-            {% endfor %}
-            {% if page.has_next %}
-            <li class="page-item"><a class="page-link" href="{% url 'productAdmin' %}?page={{ page.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Next</a></li>
-            {% endif %}
-        </ul>
-      </nav>
-</div>
-{% endblock content %}
+{% comment %} <form method="post">
+    {% csrf_token %}
+    {{ invoice_form.as_p }}
+    <table id="invoice-items">
+        <thead>
+            <tr>
+                <th>Item Name</th>
+                <th>Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{item_formset.as_p}}
+        </tbody>
+    </table>
+    <button type="submit">Submit</button>
+</form> {% endcomment %}

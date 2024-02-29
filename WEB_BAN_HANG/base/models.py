@@ -3,6 +3,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import BaseUserManager
+from PIL import Image
+from io import BytesIO
 import datetime
 # Create your models here.
 class CustomUserManager(BaseUserManager):
@@ -36,7 +38,6 @@ class User(AbstractUser):
         except:
             url = ''
         return url
-
     objects = CustomUserManager()
 class Category(models.Model):
     name = models.CharField(max_length=80)
@@ -77,6 +78,13 @@ class Product(models.Model):
         except:
             url = ''
         return url
+    def save(self, *args,**kwargs):
+        super().save(*args,**kwargs)
+        SIZE = 600, 600
+        if self.image:
+            img = Image.open(self.image.path)
+            img.thumbnail(SIZE, Image.LANCZOS)
+            img.save(self.image.path) 
 class Review(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE)
     product = models.ForeignKey(Product,on_delete=models.CASCADE)
@@ -94,6 +102,13 @@ class Review(models.Model):
             return f'{self.user.username} : {self.body[:50]}'
         else:
             return f'#{self.id}'
+def censor_bad_words(text):
+        bad_words = ["fuck", "bitch", "whore", "ass", "bastard", "bullshit", "crap", "damn", "shit", "slut", "pussy", "nigga"]
+        for word in bad_words:
+            if word in text:
+                censored_word = word[0] + '*' * (len(word) - 1)
+                text = text.replace(word, censored_word)
+        return text
 class Invoice(models.Model):
     suppiler = models.ForeignKey(Suppiler,on_delete=models.DO_NOTHING)
     status = models.SmallIntegerField(default=1)

@@ -96,11 +96,12 @@ def productPage(request, pk):
         if not body:
             messages.error(request, "Please provide a review body.")
         else:
+            clean_body = censor_bad_words(body)
             review = Review.objects.create(
                 rating=rating,
                 user=request.user,
                 product=product,
-                body=body
+                body=clean_body
             )
             messages.success(request, "Review added successfully.")
             return redirect('product',pk=product.id)
@@ -205,11 +206,11 @@ def adminLogin(request):
                 return render(request, 'base/admin/login.html')
                 
             user = authenticate(request, email=email, password=password)
-            if user is not None and user.is_superuser:
+            if user is not None and user.is_staff:
                 login(request, user)
                 return redirect('adminHome')
             else:
-                messages.error(request, 'You a not a super user')
+                messages.error(request, 'You a not a staff')
                 return render(request, 'base/admin/login.html')
         
         return render(request, 'base/admin/login.html')
@@ -255,15 +256,16 @@ def addProduct(request):
             if product.price_sell < product.price_im:
                 messages.error(request, "Sale price cannot be lower than import price.")
                 return redirect("addProduct")
-            elif product.sale_price < product.price_im:
-                messages.warning(request, "The sale price is less than the import price!")
-                return redirect("addProduct")
-            elif product.sale_price > product.price_sell:
-                messages.error(request, "Sale price cannot be higher than sell price.")
-                return redirect("addProduct")
-            elif product.sale_price and not product.is_sale:
-                messages.error(request, "If there is a sale price, please check the 'is sale' option.")
-                return redirect("addProduct")
+            elif product.sale_price:
+                if product.sale_price < product.price_im:
+                    messages.warning(request, "The sale price is less than the import price!")
+                    return redirect("addProduct")
+                elif product.sale_price > product.price_sell:
+                    messages.error(request, "Sale price cannot be higher than sell price.")
+                    return redirect("addProduct")
+                elif product.sale_price and not product.is_sale:
+                    messages.error(request, "If there is a sale price, please check the 'is sale' option.")
+                    return redirect("addProduct")
             else:
                 product.save()
                 messages.success(request, "Successfully added a new product!")
@@ -443,25 +445,48 @@ def deleteCategory(request, pk):
 #----------------------------Invoice------------------------------
 @login_required(login_url='/super/login/')
 def invoiceAdmin(request):
-    invoices = Invoice.objects.all()
-    context = {'invoices':invoices}
-    return render(request, 'base/admin/invoice.html',context)
-def add_invoice(request):
-    if request.method == 'POST':
-        invoice_form = InvoiceForm(request.POST)
-        item_formset = InvoiceItemFormSet(request.POST)
-        if invoice_form.is_valid() and item_formset.is_valid():
-            invoice = invoice_form.save()
-            items = item_formset.save(commit=False)
-            for item in items:
-                item.invoice = invoice
-                item.save()
-            return redirect('invoice_detail', pk=invoice.pk)  # Chuyển hướng đến trang chi tiết hóa đơn
+    pageView = 'read'
+    if 'q' in request.GET:
+        q = request.GET['q']
+        mutiple_q = Q( Q(suppiler__name__icontains=q) )
+        invoices = Invoice.objects.filter(mutiple_q)
     else:
-        invoice_form = InvoiceForm()
-        item_formset = InvoiceItemFormSet()
-    return render(request, 'base/admin/add_invoice.html', {'invoice_form': invoice_form, 'item_formset': item_formset})
+        invoices = Invoice.objects.all()
+    page = Paginator(invoices, 4)
+    page_list = request.GET.get('page')
+    page = page.get_page(page_list)
 
+    context = {'invoices':invoices, 'page':page, 'pageView':pageView}
+    return render(request, 'base/admin/invoice.html',context)
 def invoice_detail(request, pk):
     invoice = Invoice.objects.get(pk=pk)
     return render(request, 'base/admin/invoice_detail.html', {'invoice': invoice})
+def select_suppiler(request):
+    if request.method == "POST":
+        suppiler_form = InvoiceForm(request.POST)
+        if suppiler_form.is_valid():
+            suppiler = suppiler_form.cleaned_data['suppiler']
+            suppiler_id = Suppiler.objects.get(name=suppiler).id
+            invoice = Invoice.objects.create(suppiler_id=suppiler_id)
+            return redirect('add_invoice_item', suppiler=suppiler_id, invoice_id=invoice.id)
+    else:
+        suppiler_form = InvoiceForm()
+    return render(request, 'base/admin/select_suppiler.html', {'suppiler_form': suppiler_form})
+def add_invoice_item(request, suppiler, invoice_id):
+    products = Product.objects.filter(suppiler=suppiler)
+    if request.method == 'POST':
+        print(request.POST)
+        invoice = Invoice.objects.get(id=invoice_id)
+        for product in products:
+            quantity = request.POST.get('quantity_{}'.format(product.id))
+            if quantity and int(quantity) > 0:  
+                product_id = request.POST.get('product_{}'.format(product.id))
+                try:
+                    item = InvoiceItem.objects.create(invoice=invoice, product_id=product_id, quantity=quantity)
+                    print("Created InvoiceItem for product {} with quantity {}".format(product_id, quantity))
+                except Exception as e:
+                    print("Error creating InvoiceItem for product {}: {}".format(product_id, str(e)))
+        return redirect('invoice_detail', pk=invoice.pk)
+    return render(request, 'base/admin/add_invoice_item.html', {'products': products})
+
+

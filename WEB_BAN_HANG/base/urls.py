@@ -39,8 +39,10 @@ urlpatterns = [
     path('super/delete-category/<str:pk>', views.deleteCategory, name="deleteCategory"),
 
     path('super/invoice/', views.invoiceAdmin, name="InvoiceAdmin"),
-    path('super/add-invoice/', views.add_invoice, name='add_invoice'),
     path('super/invoice/<int:pk>/', views.invoice_detail, name='invoice_detail'),
+    path('super/select-suppiler/', views.select_suppiler, name='select_suppiler'),
+    path('super/add-invoice-item/<str:suppiler>/<str:invoice_id>/', views.add_invoice_item, name='add_invoice_item'),
+
 
     path('test', views.test, name="test")
 
