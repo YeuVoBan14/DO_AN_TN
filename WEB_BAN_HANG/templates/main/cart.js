@@ -74,27 +74,17 @@
         });
     })
 
-    // Lấy tham chiếu đến phần tử thông báo
+    // to make message disapear
     var notification = document.getElementById('messages');
-
-    // Đặt opacity ban đầu là 1
     notification.style.opacity = 1;
-
-    // Tính toán số lần lặp để đạt được opacity 0 trong 5 giây (1000ms * 5 = 5000ms)
     var numIntervals = 70;
     var intervalDuration = 100;
-
-    // Tính toán sự thay đổi của opacity trong mỗi lần lặp
     var opacityChange = 1 / numIntervals;
-
-    // Thiết lập interval để thay đổi opacity mỗi intervalDuration ms
     var fadeEffect = setInterval(function () {
-        // Nếu opacity đã đạt đến 0, dừng interval và ẩn phần tử
         if (notification.style.opacity <= 0) {
             clearInterval(fadeEffect);
             notification.style.display = 'none';
         } else {
-            // Giảm opacity đi opacityChange trong mỗi lần lặp
             notification.style.opacity -= opacityChange;
         }
     }, intervalDuration); // intervalDuration ms

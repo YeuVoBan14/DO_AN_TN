@@ -21,7 +21,7 @@
 <section class="blog_area single-post-area section_gap">
     <div class="container">
         <div class="row">
-
+            {% if pageView == 'updateProfile' %}
             <div class="col-lg-8">
                 <div class="comment-form" style="margin-top: 0%;">
                     <h4>Edit profile</h4>
@@ -34,11 +34,35 @@
                         {% endfor %}
                         <button type="submit" class="primary-btn submit_btn" style="border: none;">Update</button>
                     </form>
-                    
-                    
-                                                                       
+                    <a href="{% url "updatePassword" %}" class="genric-btn info radius" style="float: left; margin-top: -10px;">Change your password?</a>                                                        
                 </div>
             </div>
+            {% elif pageView == 'updatePassword' %}
+            <div class="col-lg-8">
+                <div class="comment-form" style="margin-top: 0%;">
+                    <h4>Update Password</h4>
+                    <form action="" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {% for field in password_form %}
+                            {% if field.name == 'old_password' %}
+                                <div class="form-group">
+                                    {{ field }}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                        {% for field in password_form %}
+                            {% if field.name != 'old_password' %}
+                                <div class="form-group">
+                                    {{ field }}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                        <button type="submit" class="primary-btn submit_btn" style="border: none;">Update</button>
+                    </form>   
+                    <a href="{{request.META.HTTP_REFERER}}" class="genric-btn info radius" style="float: left; margin-top: -10px;">Back to Profile</a>                                                    
+                </div>
+            </div>
+            {% endif %}
 
             <div class="col-lg-4">
                 <div class="blog_right_sidebar">
@@ -62,6 +86,7 @@
             </div>
 
             <!--================Product Description Area =================-->
+            {% if pageView == updateProfile %}
             <section class="product_description_area" style="width: 100%;">
                 <div class="container">
                     <ul class="nav nav-tabs" id="myTab" role="tablist">
@@ -159,6 +184,7 @@
                     </div>
                 </div>
             </section>
+            {% endif %}
             <!--================End Product Description Area =================-->
         </div>
     </div>

@@ -1,4 +1,4 @@
-from .models import Product
+from .models import Product, User
 from django.contrib import messages
 class Cart():
     def __init__(self, request):
@@ -14,6 +14,26 @@ class Cart():
 
         #make sure cart is available on all pages of site
         self.cart = cart
+    def db_add(self, product, quantity):
+        product_id = str(product)
+        product_qty = str(quantity)
+        #Logic
+        if product_id in self.cart:
+            pass
+        else:
+            #self.cart[product_id] = {'price': str(product.price_sell)}
+            self.cart[product_id] = int(product_qty)
+        self.session.modified = True
+        #Deal with logged in user
+        if self.request.user.is_authenticated:
+            #Get the current user profile
+            current_user = User.objects.filter(id=self.request.user.id)
+            #Change quatation mark form single to double for later in order to convert form string to dict using json
+            #{'3':1,'4':2} -> {"3":1,"4":2}
+            carty = str(self.cart)
+            carty = carty.replace("\'", "\"")
+            #save the carty to user model
+            current_user.update(old_cart=str(carty))
     def add(self, product, quantity):
         product_old_qty = str(product.quantity)
         product_id = str(product.id)
@@ -28,6 +48,16 @@ class Cart():
             #self.cart[product_id] = {'price': str(product.price_sell)}
             self.cart[product_id] = int(product_qty)
         self.session.modified = True
+        #Deal with logged in user
+        if self.request.user.is_authenticated:
+            #Get the current user profile
+            current_user = User.objects.filter(id=self.request.user.id)
+            #Change quatation mark form single to double for later in order to convert form string to dict using json
+            #{'3':1,'4':2} -> {"3":1,"4":2}
+            carty = str(self.cart)
+            carty = carty.replace("\'", "\"")
+            #save the carty to user model
+            current_user.update(old_cart=str(carty))
     def __len__(self):
         return len(self.cart)
     #Get product
@@ -50,7 +80,15 @@ class Cart():
         ourcart[product_id] = product_qty
 
         self.session.modified = True
-
+        if self.request.user.is_authenticated:
+            #Get the current user profile
+            current_user = User.objects.filter(id=self.request.user.id)
+            #Change quatation mark form single to double for later in order to convert form string to dict using json
+            #{'3':1,'4':2} -> {"3":1,"4":2}
+            carty = str(self.cart)
+            carty = carty.replace("\'", "\"")
+            #save the carty to user model
+            current_user.update(old_cart=str(carty))
         thing = self.cart
         return thing
     def delete(self, product):
@@ -60,6 +98,15 @@ class Cart():
             del self.cart[product_id]
         
         self.session.modified = True
+        if self.request.user.is_authenticated:
+            #Get the current user profile
+            current_user = User.objects.filter(id=self.request.user.id)
+            #Change quatation mark form single to double for later in order to convert form string to dict using json
+            #{'3':1,'4':2} -> {"3":1,"4":2}
+            carty = str(self.cart)
+            carty = carty.replace("\'", "\"")
+            #save the carty to user model
+            current_user.update(old_cart=str(carty))
     def cart_total(self):
         #Get product ids
         product_ids = self.cart.keys()

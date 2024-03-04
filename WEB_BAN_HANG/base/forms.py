@@ -1,5 +1,5 @@
 from django.forms import ModelForm
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, SetPasswordForm, PasswordResetForm, SetPasswordForm
 from .models import *
 from django import forms
 from django.forms import ModelMultipleChoiceField
@@ -7,6 +7,12 @@ from django.forms import inlineformset_factory
 GENDER_CHOICES = (
     (True, 'Male'),
     (False, 'Female'),
+)
+STATUS_CHOICES = (
+    (1, 'Pending'),
+    (2, 'Processing'),
+    (3, 'Cancel'),
+    (4, 'Delivered'),
 )
 #for register new user(customer)
 class MyUserCreationForm(UserCreationForm):
@@ -17,6 +23,15 @@ class MyUserCreationForm(UserCreationForm):
     class Meta:
         model = User
         fields = ['username', 'email', 'password1', 'password2']
+#for update password
+class ChangePasswordForm(SetPasswordForm):
+    old_password = forms.CharField(widget=forms.TextInput(attrs={'type':'password','class':'form-control','placeholder':'Old Password'}))
+    new_password1 = forms.CharField(widget=forms.TextInput(attrs={'type':'password','class':'form-control','placeholder':'New Password'}))
+    new_password2 = forms.CharField(widget=forms.TextInput(attrs={'type':'password','class':'form-control','placeholder':'Confirm New Password'}))
+    class Meta:
+        model = User
+        fields = ['old_password', 'new_password1', 'new_password2']
+
 #for edit user(customer)
 class UserForm(ModelForm):
     birth = forms.DateField(widget=forms.DateInput(attrs= {'type':'date', 'class':'form-control form-inline','placeholder':'Select date of birth'}))
@@ -74,7 +89,7 @@ class UpdateProductForm(ModelForm):
             'sale_price': forms.NumberInput(attrs={'class':'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input','placeholder':'Sale Price'}),
             'image': forms.FileInput()
         }
-class CreateSuppilerForm(ModelForm):
+class SuppilerForm(ModelForm):
     cat = ModelMultipleChoiceField(queryset=Category.objects.all(), widget=forms.SelectMultiple(attrs={'class': 'block w-full mt-1 text-sm dark:text-gray-300 dark:border-gray-600 dark:bg-gray-700 form-multiselect focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:focus:shadow-outline-gray'}))
     class Meta:
         model = Suppiler
@@ -84,31 +99,29 @@ class CreateSuppilerForm(ModelForm):
             'phone': forms.TextInput(attrs={'class':'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input', 'placeholder':'Phone Number'}),
             'address': forms.Textarea(attrs={'rows':2, 'class': 'block w-full mt-1 text-sm dark:text-gray-300 dark:border-gray-600 dark:bg-gray-700 form-textarea focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:focus:shadow-outline-gray','placeholder':'Company Address'}),
         }
-class UpdateSuppilerForm(ModelForm):
-    cat = ModelMultipleChoiceField(queryset=Category.objects.all(), widget=forms.SelectMultiple(attrs={'class': 'block w-full mt-1 text-sm dark:text-gray-300 dark:border-gray-600 dark:bg-gray-700 form-multiselect focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:focus:shadow-outline-gray'}))
+class CategoryForm(ModelForm):
     class Meta:
-        model = Suppiler
-        fields = ['name', 'phone', 'address', 'cat']
+        model=Category
+        fields='__all__'
+        widgets ={
+            'name': forms.TextInput(attrs={'class':'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input', 'placeholder':'Category Name'}),
+            'parent': forms.Select(attrs={'class': 'block w-full mt-1 text-sm dark:text-gray-300 dark:border-gray-600 dark:bg-gray-700 form-select focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:focus:shadow-outline-gray'}),
+        }
+class CustomerForm(ModelForm):
+    gender = forms.ChoiceField(choices=GENDER_CHOICES, widget=forms.RadioSelect(attrs={'class': 'form-inline', 'style': 'margin-left: 10px;'}))
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'birth', 'gender', 'email', 'phone', 'avatar']
         widgets = {
-            'name': forms.TextInput(attrs={'class':'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input', 'placeholder':'Company Name'}),
-            'phone': forms.TextInput(attrs={'class':'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input', 'placeholder':'Phone Number'}),
-            'address': forms.Textarea(attrs={'rows':2, 'class': 'block w-full mt-1 text-sm dark:text-gray-300 dark:border-gray-600 dark:bg-gray-700 form-textarea focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:focus:shadow-outline-gray','placeholder':'Company Address'}),
-        }
-class CreateCategoryForm(ModelForm):
-    class Meta:
-        model=Category
-        fields='__all__'
-        widgets ={
-            'name': forms.TextInput(attrs={'class':'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input', 'placeholder':'Category Name'}),
-            'parent': forms.Select(attrs={'class': 'block w-full mt-1 text-sm dark:text-gray-300 dark:border-gray-600 dark:bg-gray-700 form-select focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:focus:shadow-outline-gray'}),
-        }
-class UpdateCategoryForm(ModelForm):
-    class Meta:
-        model=Category
-        fields='__all__'
-        widgets ={
-            'name': forms.TextInput(attrs={'class':'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input', 'placeholder':'Category Name'}),
-            'parent': forms.Select(attrs={'class': 'block w-full mt-1 text-sm dark:text-gray-300 dark:border-gray-600 dark:bg-gray-700 form-select focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:focus:shadow-outline-gray'}),
+            'username':forms.TextInput(attrs={'class':'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input', 'placeholder':'Username'}),
+            'password1':forms.TextInput(attrs={'class':'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input', 'placeholder':'Password'}),
+            'password2':forms.TextInput(attrs={'class':'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input', 'placeholder':'Confirm Password'}),
+            'first_name':forms.TextInput(attrs={'class':'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input', 'placeholder':'First Name'}),
+            'last_name':forms.TextInput(attrs={'class':'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input', 'placeholder':'Last Name'}),
+            'birth':forms.DateInput(attrs= {'type':'date','class':'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input', 'placeholder':'Select date of Birth'}),
+            'email':forms.TextInput(attrs={'type':'email','class':'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input', 'placeholder':'Email address'}),
+            'phone':forms.TextInput(attrs={'class':'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input', 'placeholder':'Phone Number'}),
+            'avatar':forms.FileInput()
         }
 class InvoiceForm(ModelForm):
     class Meta:
@@ -117,6 +130,40 @@ class InvoiceForm(ModelForm):
         widgets ={
             'suppiler': forms.Select(attrs={'class': 'block w-full mt-1 text-sm dark:text-gray-300 dark:border-gray-600 dark:bg-gray-700 form-select focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:focus:shadow-outline-gray'}),
         }
+class ChangeInvoiceStatus(ModelForm):
+    status = forms.ChoiceField(choices=STATUS_CHOICES, widget=forms.Select(attrs={'class':"block w-full mt-1 text-sm dark:text-gray-300 dark:border-gray-600 dark:bg-gray-700 form-select focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:focus:shadow-outline-gray"}))
+    class Meta:
+        model = Invoice
+        fields = ['status']
+class CustomPasswordResetForm(PasswordResetForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].widget.attrs.update({
+            'type': 'email',
+            'class': 'form-control',
+            'placeholder': 'Email',
+            'onfocus': "this.placeholder = ''",
+        })
+class CustomSetPasswordForm(SetPasswordForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['new_password1'].widget.attrs.update({
+            'type': 'email',
+            'class': 'form-control',
+            'placeholder': 'New password',
+            'onfocus': "this.placeholder = ''",
+        })
+        self.fields['new_password2'].widget.attrs.update({
+            'type': 'email',
+            'class': 'form-control',
+            'placeholder': 'Confirm password',
+            'onfocus': "this.placeholder = ''",
+        })
+class ShippingForm(ModelForm):
+    class Meta:
+        model = ShippingAddress
+        fields = ['address', 'city', 'state', 'zipcode']
+
 
 
         

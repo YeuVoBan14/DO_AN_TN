@@ -25,8 +25,9 @@ class User(AbstractUser):
     birth = models.DateField(blank=True,null=True)
     gender = models.BooleanField(default=False)
     email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=10,null=True)
+    phone = models.CharField(max_length=10,blank=True,null=True)
     avatar = models.ImageField(null=True,blank=True,upload_to='users/',default= 'users/avatar.svg')
+    old_cart = models.CharField(max_length=200, blank=True, null=True)
     updated = models.DateTimeField(auto_now=True)
     created = models.DateTimeField(auto_now_add=True)
     USERNAME_FIELD = 'email'
@@ -42,7 +43,7 @@ class User(AbstractUser):
 class Category(models.Model):
     name = models.CharField(max_length=80)
     parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)
-    # updated = models.DateTimeField(auto_now=True)
+    updated = models.DateTimeField(auto_now=True)
     # created = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return self.name
@@ -51,7 +52,7 @@ class Suppiler(models.Model):
     phone = models.CharField(max_length=10)
     address = models.TextField()
     cat = models.ManyToManyField(Category,blank=True)
-    # updated = models.DateTimeField(auto_now=True)
+    updated = models.DateTimeField(auto_now=True)
     # created = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return self.name
@@ -119,6 +120,14 @@ class Invoice(models.Model):
         ordering = ['-created']
     def __str__(self):
         return f"{self.id} - {self.suppiler}"
+    def calculate_total_value(self):
+        total_value = 0
+        for item in self.invoiceitem_set.all():
+            if item.product.is_sale:
+                total_value += item.quantity * item.product.sale_price
+            else:
+                total_value += item.quantity * item.product.price_sell
+        return total_value
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(Invoice,on_delete=models.CASCADE)
     product = models.ForeignKey(Product,on_delete=models.DO_NOTHING)
@@ -127,6 +136,14 @@ class InvoiceItem(models.Model):
     added = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return self.product.name
+    def item_total(self):
+        quantity = self.quantity
+        if self.product.is_sale:
+            price = self.product.sale_price
+        else:
+            price = self.product.price_sell
+        value = price * quantity
+        return value
 class Order(models.Model):
     user = models.ForeignKey(User,on_delete=models.DO_NOTHING)
     status = models.SmallIntegerField(default=1)
@@ -145,20 +162,19 @@ class OrderItem(models.Model):
     added = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return self.product.name
-class ShippingAdress(models.Model):
-    user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True, blank=True)
-    order = models.ForeignKey("Order", on_delete=models.SET_NULL, null=True, blank=True)
+class ShippingAddress(models.Model):
+    user = models.OneToOneField(User,on_delete=models.CASCADE)
     address = models.CharField(max_length=200, null=True)
     city = models.CharField(max_length=50, null=True)
     state = models.CharField(max_length=50, null=True)
     zipcode = models.CharField(max_length=50, null=True)
     updated = models.DateTimeField(auto_now=True)
     def __str__(self):
-        return self.address
-
+        return self.user
+#for invoice
 @receiver(post_save, sender=Invoice)
 def update_product_quantity(sender, instance, **kwargs):
-    if instance.status == 2:  # If status is approved
+    if instance.status == 4:  # If status is approved
         with transaction.atomic():
             items = InvoiceItem.objects.filter(invoice=instance)
             for item in items:

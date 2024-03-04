@@ -10,18 +10,22 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import JsonResponse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
-from django.views.generic import ListView
-from django.views.generic.edit import (
-    CreateView, UpdateView
-)
+import json
+from io import BytesIO
+from django.template.loader import get_template
+from django.views import View
+from xhtml2pdf import pisa
+from django.template.loader import render_to_string
+from django.utils.decorators import method_decorator
+
 
 # Create your views here.
 def test(request):
-    return render(request, 'base/admin/login.html')
+    return render(request, 'base/admin/pdf_invoice.html')
 def loginPage(request):
     page = 'login'
     if request.method == "POST":
-        email = request.POST.get('email').lower()
+        email = request.POST.get('email')
         password = request.POST.get('password')
         try:
             user = User.objects.get(email=email)
@@ -31,6 +35,22 @@ def loginPage(request):
         user = authenticate(request, email=email, password=password)
         if user is not None:
             login(request, user)
+
+            #add cart string from model back to session
+            current_user = User.objects.get(id=request.user.id)
+            #Get the save cart from db
+            saved_cart = current_user.old_cart
+            #Convert db string to dict
+            if saved_cart:
+                #Convert to dict using json
+                converted_cart = json.loads(saved_cart)
+                #add the loaded cart dict to session
+                #get the cart
+                cart = Cart(request)
+                #loop thru the cart and add items from db
+                for key,value in converted_cart.items():
+                    cart.db_add(product=key, quantity=value)
+
             return redirect('home')
         else:
             messages.error(request,'Invalid Password or Email')
@@ -51,7 +71,7 @@ def registerPage(request):
             user = form.save(commit=False)
             #clean the data
             user.username = user.username.lower()
-            user.email = user.email.lower()
+            user.email = user.email
             user.save()
             login(request, user)
             messages.success(request,  f"Account Created for {user.username}")
@@ -117,16 +137,74 @@ def deleteReview(request,pk):
         messages.warning(request,'The review has been deleted!')
         return redirect('product', pk=review.product.id)
     return render(request, 'base/main/delete.html', {'obj': review})
+
+def userProfile(request, pk):
+    pageView = 'updateProfile'
+    user = User.objects.get(id=pk)
+    form = UserForm(instance=user)
+    reviews = user.review_set.all()
+    sale_prods = Product.objects.filter(is_sale=True)[:9]
+    if request.method == 'POST':
+        form = UserForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            instance = form.instance
+            form = UserForm(instance=instance)
+            messages.success(request,"Your profile has been update")
+            return redirect('user-profile', pk=user.id)
+        else:
+            messages.error(request,"Please correct the error below.")
+            return redirect('user-profile', pk=user.id)
+    context = {'user': user, 'form': form, 'reviews': reviews, 'sale_prods':sale_prods, 'pageView':pageView}
+    return render(request, 'base/main/profile.html', context)
+def updatePassword(request):
+    if request.user.is_authenticated:
+        current_user = request.user
+        sale_prods = Product.objects.filter(is_sale=True)[:9]
+        
+        if request.method == 'POST':
+            password_form = ChangePasswordForm(current_user, request.POST)
+            old_password = request.POST['old_password']  
+            user = authenticate(request, email=current_user.email, password=old_password) 
+            if user is not None:
+                if password_form.is_valid():
+                    password_form.save()
+                    messages.success(request, 'Password changed successfully')
+                    login(request, current_user)
+                    return redirect('user-profile', pk=current_user.id)
+                else:
+                    for error in list(password_form.errors.values()):
+                        messages.error(request, error)
+                    return redirect('updatePassword')
+            else:
+                messages.error(request, 'Please correct your old password')
+        else:
+            password_form = ChangePasswordForm(current_user)
+            context = {'password_form':password_form, 'pageView':'updatePassword', 'sale_prods':sale_prods}
+            return render(request, 'base/main/profile.html', context)
+        return redirect('updatePassword')
+    else:
+        messages.warning(request, "You must be logged in to view this page.")
+        return redirect('loginPage')
 #-------------------------Cart----------------------------
 def cart(request):
+    if request.user.is_authenticated:
     #Get the cart
-    cart = Cart(request)
-    cart_products = cart.get_prods()
-    sale_prods = Product.objects.filter(is_sale=True)[:9]
-    quantities = cart.get_quants()
-    totals = cart.cart_total()
-    item_total = cart.item_total()
-    context = {'cart_products':cart_products, 'quantities':quantities, 'totals':totals, 'item_total':item_total, 'sale_prods': sale_prods}
+        cart = Cart(request)
+        cart_products = cart.get_prods()
+        sale_prods = Product.objects.filter(is_sale=True)[:9]
+        quantities = cart.get_quants()
+        totals = cart.cart_total()
+        item_total = cart.item_total()
+        #shipping address
+    else:
+        messages.error(request, 'Please login first!')
+        return redirect('login')
+    context = {'cart_products':cart_products, 
+               'quantities':quantities, 
+               'totals':totals, 
+               'item_total':item_total, 
+               'sale_prods': sale_prods}
     return render(request, 'base/main/cart.html', context)
 
 def cartAdd(request):
@@ -170,24 +248,6 @@ def cartUpdate(request):
         messages.success(request,'Shopping cart have been updated!')
         return response
     
-def userProfile(request, pk):
-    user = User.objects.get(id=pk)
-    form = UserForm(instance=user)
-    reviews = user.review_set.all()
-    sale_prods = Product.objects.filter(is_sale=True)[:9]
-    if request.method == 'POST':
-        form = UserForm(request.POST, request.FILES, instance=user)
-        if form.is_valid():
-            form.save()
-            instance = form.instance
-            form = UserForm(instance=instance)
-            messages.success(request,"Your profile has been update")
-            return redirect('user-profile', pk=user.id)
-        else:
-            messages.error(request,"Please correct the error below.")
-            return redirect('user-profile', pk=user.id)
-    context = {'user': user, 'form': form, 'reviews': reviews, 'sale_prods':sale_prods}
-    return render(request, 'base/main/profile.html', context)
 
 ###################### ADMIN SITE #########################
 def adminLogin(request):
@@ -196,7 +256,7 @@ def adminLogin(request):
             return redirect('adminHome')
         
         if request.method == 'POST':
-            email = request.POST.get('email').lower()
+            email = request.POST.get('email')
             password = request.POST.get('password')
             
             try:
@@ -223,8 +283,9 @@ def adminLogout(request):
 
 @login_required(login_url='/super/login/')
 def adminHome(request):
-    customers = User.objects.filter(is_superuser=False)
-    context = {'customers':customers}
+    customers = User.objects.filter(is_staff=False)
+    invoices = Invoice.objects.filter(status=1)
+    context = {'customers':customers, 'invoices':invoices}
     return render(request, 'base/admin/home.html',context)
 ## Product
 @login_required(login_url='/super/login/')
@@ -235,7 +296,7 @@ def productAdmin(request):
         mutiple_q = Q(  Q(cat__name__icontains=q)|
                         Q(name__contains=q)|
                         Q(suppiler__name__icontains=q)|
-                        Q(suppiler__name__icontains=q) )
+                        Q(cat__name__icontains=q) )
         products = Product.objects.filter(mutiple_q)
     else:
         products = Product.objects.all()
@@ -335,9 +396,9 @@ def suppilerAdmin(request):
 @login_required(login_url='/super/login/')
 def addSuppiler(request):
     pageView = 'add'
-    form = CreateSuppilerForm()
+    form = SuppilerForm()
     if request.method == 'POST':
-        form = CreateSuppilerForm(request.POST)
+        form = SuppilerForm(request.POST)
         if form.is_valid():
             suppiler = form.save(commit=False)
             categories = form.cleaned_data['cat']
@@ -356,21 +417,21 @@ def addSuppiler(request):
 def updateSuppiler(request, pk):
     pageView = 'edit'
     suppiler = Suppiler.objects.get(id=pk)
-    form = UpdateSuppilerForm(instance=suppiler)
+    form = SuppilerForm(instance=suppiler)
     if request.method == 'POST':
-        form = UpdateSuppilerForm(request.POST, instance=suppiler)
+        form = SuppilerForm(request.POST, instance=suppiler)
         if form.is_valid():
             product = form.save(commit=False)
             categories = form.cleaned_data['cat']
             if len(suppiler.phone) != 10:
                 messages.error(request, "Phone number must have exactly 10 digits.")
-                return redirect("addSuppiler")
+                return redirect("updateSuppiler", pk=suppiler.id)
             else:
                 suppiler.save()
                 suppiler.cat.set(categories)
                 suppiler.save()
                 instance = form.instance
-                form = UpdateSuppilerForm(instance=instance)
+                form = SuppilerForm(instance=instance)
                 messages.success(request,"Your suppiler has been updated")
                 return redirect("suppilerAdmin")
         else:
@@ -406,9 +467,9 @@ def categoryAdmin(request):
 @login_required(login_url="/super/login/")
 def addCategory(request):
     pageView = 'add'
-    form = CreateCategoryForm()
+    form = CategoryForm()
     if request.method == 'POST':
-        form = CreateCategoryForm(request.POST)
+        form = CategoryForm(request.POST)
         if form.is_valid():
             form.save()
             messages.success(request, "Successfully added a new category!")
@@ -419,13 +480,13 @@ def addCategory(request):
 def updateCategory(request, pk):
     pageView = 'edit'
     category = Category.objects.get(id=pk)
-    form = UpdateCategoryForm(instance=category)
+    form = CategoryForm(instance=category)
     if request.method == 'POST':
-        form = UpdateCategoryForm(request.POST, instance=category)
+        form = CategoryForm(request.POST, instance=category)
         if form.is_valid():
             form.save()
             instance = form.instance
-            form = UpdateCategoryForm(instance=instance)
+            form = CategoryForm(instance=instance)
             messages.success(request,"Your category has been updated")
             return redirect("categoryAdmin")
         else:
@@ -442,6 +503,56 @@ def deleteCategory(request, pk):
         messages.warning(request,'The selected category has been deleted!')
         return redirect('categoryAdmin')
     return render(request,'base/admin/product.html',{'obj': category, 'pageView':pageView})
+#----------------------------Customer------------------------------
+@login_required(login_url='/super/login/')
+def customerAdmin(request):
+    pageView = 'read'
+    if 'q' in request.GET:
+        q = request.GET['q']
+        mutiple_q = Q( Q(username__icontains=q) |
+                        Q(first_name__icontains=q) |
+                        Q(last_name__icontains=q) |
+                        Q(email__icontains=q))
+        customers = User.objects.filter(mutiple_q, is_staff=False)
+    else:
+        customers = User.objects.filter(is_staff=False)
+    page = Paginator(customers, 4)
+    page_list = request.GET.get('page')
+    page = page.get_page(page_list)
+    context = {'customers':customers, 'page':page, 'pageView':pageView}
+    return render(request, 'base/admin/customer.html',context)
+@login_required(login_url='/super/login/')
+def updateCustomer(request,pk):
+    pageView = 'edit'
+    customer = User.objects.get(id=pk)
+    form = CustomerForm(instance=customer)
+    if request.method == 'POST':
+        form = CustomerForm(request.POST, instance=customer)
+        if form.is_valid():
+            customer = form.save(commit=False)
+            if len(customer.phone) != 10:
+                messages.error(request, "Phone number must have exactly 10 digits.")
+                return redirect("updateCustomer", pk=customer.id)
+            else:
+                form.save()
+                instance = form.instance
+                form = CustomerForm(instance=instance)
+                messages.success(request,"Your customer has been updated")
+            return redirect("customerAdmin")
+        else:
+            messages.error(request,"Please correct the error below.")
+            return redirect('updateCustomer', pk=customer.id)
+    context = {'form':form, 'pageView':pageView}
+    return render(request, 'base/admin/customer.html', context)
+@login_required(login_url='/super/login/')
+def deleteCustomer(request, pk):
+    pageView = 'delete'
+    customer = User.objects.get(id=pk)
+    if request.method == 'POST':
+        customer.delete()
+        messages.warning(request,'The selected customer has been deleted!')
+        return redirect('customerAdmin')
+    return render(request,'base/admin/customer.html',{'obj': customer, 'pageView':pageView})
 #----------------------------Invoice------------------------------
 @login_required(login_url='/super/login/')
 def invoiceAdmin(request):
@@ -458,21 +569,31 @@ def invoiceAdmin(request):
 
     context = {'invoices':invoices, 'page':page, 'pageView':pageView}
     return render(request, 'base/admin/invoice.html',context)
-def invoice_detail(request, pk):
+@login_required(login_url='/super/login/')
+def invoiceDetail(request, pk):
+    pageView = 'detail'
     invoice = Invoice.objects.get(pk=pk)
-    return render(request, 'base/admin/invoice_detail.html', {'invoice': invoice})
-def select_suppiler(request):
+    invoice_value = invoice.calculate_total_value()
+    invoice_items = invoice.invoiceitem_set.all()
+    context = {'invoice_items':invoice_items, 'invoice':invoice, 'pageView':pageView, 'invoice_value': invoice_value}
+    return render(request, 'base/admin/invoice.html', context)
+@login_required(login_url='/super/login/')
+def addInvoice(request):
+    pageView = 'addSuppiler'
     if request.method == "POST":
         suppiler_form = InvoiceForm(request.POST)
         if suppiler_form.is_valid():
             suppiler = suppiler_form.cleaned_data['suppiler']
             suppiler_id = Suppiler.objects.get(name=suppiler).id
             invoice = Invoice.objects.create(suppiler_id=suppiler_id)
-            return redirect('add_invoice_item', suppiler=suppiler_id, invoice_id=invoice.id)
+            return redirect('addInvoiceItem', suppiler=suppiler_id, invoice_id=invoice.id)
     else:
         suppiler_form = InvoiceForm()
-    return render(request, 'base/admin/select_suppiler.html', {'suppiler_form': suppiler_form})
-def add_invoice_item(request, suppiler, invoice_id):
+    context = {'suppiler_form':suppiler_form, 'pageView':pageView}
+    return render(request, 'base/admin/invoice.html', context)
+@login_required(login_url='/super/login/')
+def addInvoiceItem(request, suppiler, invoice_id):
+    pageView = 'addInvoiceItem'
     products = Product.objects.filter(suppiler=suppiler)
     if request.method == 'POST':
         print(request.POST)
@@ -486,7 +607,56 @@ def add_invoice_item(request, suppiler, invoice_id):
                     print("Created InvoiceItem for product {} with quantity {}".format(product_id, quantity))
                 except Exception as e:
                     print("Error creating InvoiceItem for product {}: {}".format(product_id, str(e)))
-        return redirect('invoice_detail', pk=invoice.pk)
-    return render(request, 'base/admin/add_invoice_item.html', {'products': products})
-
-
+        return redirect('invoiceDetail', pk=invoice.pk)
+    context = {'products': products, 'pageView':pageView}
+    return render(request, 'base/admin/invoice.html', context)
+@login_required(login_url='/super/login/')
+def updateInvoiceStatus(request,pk):
+    pageView = 'updateStatus'
+    invoice = Invoice.objects.get(id=pk)
+    if request.method == "POST":
+        status_form = ChangeInvoiceStatus(request.POST, instance=invoice)
+        if status_form.is_valid():
+            status_form.save()
+            return redirect('invoiceAdmin')
+    else:
+        status_form = ChangeInvoiceStatus(instance=invoice)
+    context = {"status_form":status_form, 'invoice':invoice, 'pageView':pageView}
+    return render(request, 'base/admin/invoice.html', context)
+@login_required(login_url='/super/login/')
+def deleteInvoice(request, pk):
+    pageView = 'delete'
+    invoice = Invoice.objects.get(id=pk)
+    if request.method == 'POST':
+        invoice.delete()
+        messages.warning(request,'The selected invoice has been deleted!')
+        return redirect('invoiceAdmin')
+    return render(request,'base/admin/invoice.html',{'obj': invoice, 'pageView':pageView})
+@login_required(login_url='/super/login/')
+def render_to_pdf(template_scr, context_dict={}):
+    template = get_template(template_scr)
+    html = template.render(context_dict)
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")),result)
+    if not pdf:
+        return HttpResponse(result.getvalue(), content_type='application/pdf')
+    return None
+class generatePDF(View):
+    @method_decorator(login_required(login_url='/super/login/'))
+    def get(self, request,pk, *args,**kwargs):
+        invoice = Invoice.objects.get(id=pk)
+        items = invoice.invoiceitem_set.all()
+        context = {
+            'invoice': invoice,
+            'suppiler': invoice.suppiler,
+            'items': items,
+            'total': invoice.calculate_total_value()
+        }
+        html = render_to_string('base/admin/pdf_invoice.html', context)
+        pdf = BytesIO()
+        pisa.pisaDocument(BytesIO(html.encode("UTF-8")), pdf)
+        response = HttpResponse(pdf.getvalue(), content_type='application/pdf')
+        content = "invoice_{0}.pdf".format(invoice.id)
+        response['Content-Disposition'] = content
+        return response
+#----------------------------End Invoice------------------------------

@@ -1,9 +1,39 @@
 from django.urls import path
 from . import views
+from .views import generatePDF
+from django.contrib.auth import views as auth_views
+from .forms import CustomPasswordResetForm, CustomSetPasswordForm
+
 urlpatterns = [
     path('login/', views.loginPage, name="login"),
     path('logout/', views.logoutUser, name="logout"),
     path('register/', views.registerPage, name="register"),
+    # url for forgot password
+    # 1 - Submit email form                     //PasswordResetView.as view()
+    # 2 - Email sent success message            //PasswordResetDoneView.as view()
+    # 3 - Link to password Rest form in email   //PasswordResetConfirmView.as view()
+    # 4 - Password successfully changed message //PasswordResetCompleteView.as_view()
+    path('reset_password/', 
+         auth_views.PasswordResetView.as_view(
+             template_name="base/main/reset_pass/password_reset.html",
+             form_class=CustomPasswordResetForm), 
+         name="reset_password"),
+
+    path('reset_password_sent', 
+         auth_views.PasswordResetDoneView.as_view(template_name="base/main/reset_pass/password_reset_sent.html"),
+         name="password_reset_done"),
+
+    path('reset/<uidb64>/<token>/', 
+         auth_views.PasswordResetConfirmView.as_view(
+             template_name="base/main/reset_pass/password_reset_form.html",
+             form_class=CustomSetPasswordForm),
+         name="password_reset_confirm"),
+
+    path('reset_password_complete', 
+         auth_views.PasswordResetCompleteView.as_view(template_name="base/main/reset_pass/password_reset_done.html"),
+         name="password_reset_complete"),
+
+    #end
 
     path('', views.home, name="home"),
     path('product/<str:pk>/', views.productPage, name='product'),
@@ -16,6 +46,7 @@ urlpatterns = [
     path('delete-review/<str:pk>', views.deleteReview, name="delete-review"),
 
     path('profile/<str:pk>', views.userProfile, name="user-profile"),
+    path('update-password', views.updatePassword, name="updatePassword"),
 
 
     # path for admin
@@ -38,10 +69,17 @@ urlpatterns = [
     path('super/update-category/<str:pk>', views.updateCategory, name="updateCategory"),
     path('super/delete-category/<str:pk>', views.deleteCategory, name="deleteCategory"),
 
-    path('super/invoice/', views.invoiceAdmin, name="InvoiceAdmin"),
-    path('super/invoice/<int:pk>/', views.invoice_detail, name='invoice_detail'),
-    path('super/select-suppiler/', views.select_suppiler, name='select_suppiler'),
-    path('super/add-invoice-item/<str:suppiler>/<str:invoice_id>/', views.add_invoice_item, name='add_invoice_item'),
+    path('super/customer/', views.customerAdmin, name="customerAdmin"),
+    path('super/update-customer/<str:pk>', views.updateCustomer, name="updateCustomer"),
+    path('super/delete-customer/<str:pk>', views.deleteCustomer, name="deleteCustomer"),
+
+    path('super/invoice/', views.invoiceAdmin, name="invoiceAdmin"),
+    path('super/invoice/<int:pk>/', views.invoiceDetail, name='invoiceDetail'),
+    path('super/add-invoice/', views.addInvoice, name='addInvoice'),
+    path('super/add-invoice-item/<str:suppiler>/<str:invoice_id>/', views.addInvoiceItem, name='addInvoiceItem'),
+    path('super/invoice/change-status/<str:pk>', views.updateInvoiceStatus, name="updateInvoiceStatus"),
+    path('super/delete-invoice/<str:pk>', views.deleteInvoice, name="deleteInvoice"),
+    path('super/invoice/generate-pdf/<str:pk>', views.generatePDF.as_view(), name="generatePDF"),
 
 
     path('test', views.test, name="test")
