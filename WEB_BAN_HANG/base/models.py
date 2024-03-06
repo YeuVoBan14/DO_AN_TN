@@ -153,7 +153,15 @@ class Order(models.Model):
     class Meta:
         ordering = ['-created']
     def __str__(self):
-        return str(self.id)
+        return f'#{self.id}-{self.user.username}'
+    def calculate_total_value(self):
+        total_value = 0
+        for item in self.orderitem_set.all():
+            if item.product.is_sale:
+                total_value += item.quantity * item.product.sale_price
+            else:
+                total_value += item.quantity * item.product.price_sell
+        return total_value
 class OrderItem(models.Model):
     order = models.ForeignKey(Order,on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
@@ -162,24 +170,42 @@ class OrderItem(models.Model):
     added = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return self.product.name
+    def item_total(self):
+        quantity = self.quantity
+        if self.product.is_sale:
+            price = self.product.sale_price
+        else:
+            price = self.product.price_sell
+        value = price * quantity
+        return value
 class ShippingAddress(models.Model):
-    user = models.OneToOneField(User,on_delete=models.CASCADE)
-    address = models.CharField(max_length=200, null=True)
-    city = models.CharField(max_length=50, null=True)
-    state = models.CharField(max_length=50, null=True)
-    zipcode = models.CharField(max_length=50, null=True)
+    user = models.ForeignKey(User,on_delete=models.CASCADE)
+    address = models.CharField(max_length=200, null=True, blank=True)
+    city = models.CharField(max_length=50, null=True, blank=True)
+    district = models.CharField(max_length=50, null=True, blank=True)
+    zipcode = models.CharField(max_length=50, null=True, blank=True)
     updated = models.DateTimeField(auto_now=True)
     def __str__(self):
-        return self.user
+        return self.user.email
 #for invoice
 @receiver(post_save, sender=Invoice)
-def update_product_quantity(sender, instance, **kwargs):
+def update_invoice_product_quantity(sender, instance, **kwargs):
     if instance.status == 4:  # If status is approved
         with transaction.atomic():
             items = InvoiceItem.objects.filter(invoice=instance)
             for item in items:
                 product = item.product
                 product.quantity += item.quantity
+                product.save()
+
+@receiver(post_save, sender=Order)
+def update_order_product_quantity(sender, instance, **kwargs):
+    if instance.status == 4:  # If status is approved
+        with transaction.atomic():
+            items = OrderItem.objects.filter(order=instance)
+            for item in items:
+                product = item.product
+                product.quantity -= item.quantity
                 product.save()
 
 

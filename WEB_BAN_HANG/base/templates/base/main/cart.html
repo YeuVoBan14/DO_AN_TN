@@ -10,7 +10,7 @@
                 <h1>Shopping cart</h1>
                 <nav class="d-flex align-items-center">
                     <a href="{% url 'home' %}">Home<span class="lnr lnr-arrow-right"></span></a>
-                    <a href="#">Shopping cart</a>
+                    <a href="{% url "cart" %}">Shopping cart</a>
                 </nav>
             </div>
         </div>
@@ -83,7 +83,7 @@
                             <td style="text-align:center;">
                                 <h5>{% for key,value in item_total.items %}
                                     {% if key == product.id|stringformat:"s" %}
-                                        <span>{{value}}</span>
+                                        <span>${{value}}</span>
                                     {% endif %}
                                 {% endfor %}</h5>
                             </td>
@@ -100,30 +100,6 @@
                                 <h5>${{totals}}</h5>
                             </td>
                         </tr>
-                        <tr class="shipping_area">
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td class="checkout" colspan="">
-                                <div class="shipping_box" >
-                                    <h6>Shipping</h6>
-                                    <select class="shipping_select">
-                                        <option value="1">Bangladesh</option>
-                                        <option value="2">India</option>
-                                        <option value="4">Pakistan</option>
-                                    </select>
-                                    <select class="shipping_select">
-                                        <option value="1">Select a State</option>
-                                        <option value="2">Select a State</option>
-                                        <option value="4">Select a State</option>
-                                    </select>
-                                    <input type="text" placeholder="Postcode/Zipcode">
-                                    <a class="gray_btn" href="#">Update Details</a>
-                                </div>
-                            </td>
-                        </tr>
                         <tr class="out_button_area">
                             <td></td>
                             <td></td>
@@ -133,7 +109,7 @@
                             <td colspan="3">
                                 <div class="checkout_btn_inner d-flex align-items-center">
                                     <a class="gray_btn" href="{% url 'home' %}">Continue Shopping</a>
-                                    <a class="primary-btn" href="#">Proceed to checkout</a>
+                                    <a class="primary-btn" href="{% url "checkout" %}">Proceed to checkout</a>
                                 </div>
                             </td>
                         </tr>

@@ -107,6 +107,14 @@ class Cart():
             carty = carty.replace("\'", "\"")
             #save the carty to user model
             current_user.update(old_cart=str(carty))
+    def clear_cart(self):
+        print("Clearing cart...")
+        self.cart = {}
+        self.session.modified = True
+        if self.request.user.is_authenticated:
+            current_user = User.objects.filter(id=self.request.user.id)
+            carty = str(self.cart)
+            current_user.update(old_cart=str(carty))
     def cart_total(self):
         #Get product ids
         product_ids = self.cart.keys()
@@ -138,4 +146,5 @@ class Cart():
                 total_price = product.price_sell * quantity
             total_dict[product_id] = total_price
         return total_dict
+    
         

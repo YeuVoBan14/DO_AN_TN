@@ -10,7 +10,7 @@
                 <h1 style="text-transform: uppercase;">Hello {{user.username}}</h1>
                 <nav class="d-flex align-items-center">
                     <a href="{% url 'home' %}">Home<span class="lnr lnr-arrow-right"></span></a>
-                    <a href="{% url "user-profile" request.user.id %}">Profile</a>
+                    <a href="#">Profile</a>
                 </nav>
             </div>
         </div>
@@ -34,7 +34,7 @@
                         {% endfor %}
                         <button type="submit" class="primary-btn submit_btn" style="border: none;">Update</button>
                     </form>
-                    <a href="{% url "updatePassword" %}" class="genric-btn info radius"
+                    <a href="{% url " updatePassword" %}" class="genric-btn info radius"
                         style="float: left; margin-top: -10px;">Change your password?</a>
                 </div>
             </div>
@@ -123,13 +123,13 @@
             </div>
 
             <!--================Product Description Area =================-->
-            {% if pageView == 'updateProfile' or pageView == 'orderDetail'%}
+            {% if pageView == 'updateProfile' %}
             <section class="product_description_area" style="width: 100%;">
                 <div class="container">
                     <ul class="nav nav-tabs" id="myTab" role="tablist">
                         <li class="nav-item">
                             <a class="nav-link" id="home-tab" data-toggle="tab" href="#home" role="tab"
-                                aria-controls="home" aria-selected="true">Orders</a>
+                                aria-controls="home" aria-selected="true">Description</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link active" id="review-tab" data-toggle="tab" href="#review" role="tab"
@@ -146,7 +146,6 @@
                                             <div class="country">Status</div>
                                             <div class="country">Created</div>
                                             <div class="country">Total</div>
-                                            <div class="country">Date</div>
                                             <div class="country">Action</div>
                                         </div>
                                         {% for order in orders %}
@@ -154,21 +153,24 @@
                                             <div class="serial">{{order.id}}</div>
                                             <div class="country">
                                                 {% if order.status == 1 %}
-                                                <span style="padding:5px 10px; background:#f1c40f; border-radius:40px; color: white;">Pending<span>
-                                                {% elif order.status == 2 %}
-                                                <span style="padding:5px 10px; background:#3498db; border-radius:40px; color: white;">Processing<span>
-                                                {% elif order.status == 3 %}
-                                                <span style="padding:5px 10px; background:#e74c3c; border-radius:40px; color: white;">Cancel<span>
-                                                {% elif order.status == 4 %}
-                                                <span style="padding:5px 10px; background:#2ecc71; border-radius:40px; color: white;">Delivered<span>
-                                                {% endif %}
+                                                <span
+                                                    style="padding:5px 10px; background:#f1c40f; border-radius:40px; color: white;">Pending<span>
+                                                        {% elif order.status == 2 %}
+                                                        <span
+                                                            style="padding:5px 10px; background:#3498db; border-radius:40px; color: white;">Processing<span>
+                                                                {% elif order.status == 3 %}
+                                                                <span
+                                                                    style="padding:5px 10px; background:#e74c3c; border-radius:40px; color: white;">Cancel<span>
+                                                                        {% elif order.status == 4 %}
+                                                                        <span
+                                                                            style="padding:5px 10px; background:#2ecc71; border-radius:40px; color: white;">Delivered<span>
+                                                                                {% endif %}
                                             </div>
                                             <div class="country">{{order.created}}</div>
                                             <div class="country">${{order.calculate_total_value|floatformat:2}}</div>
-                                            <div class="country">{{order.created}}</div>
                                             <div class="country">
-                                                <a href="{% url "orderDetail" order.id %}"
-                                                    class="genric-btn primary">View</a>
+                                                {% comment %} <a href="{% url " orderDetail" order.id %}"
+                                                    class="genric-btn primary">View</a> {% endcomment %}
                                             </div>
                                         </div>
                                         {% endfor %}

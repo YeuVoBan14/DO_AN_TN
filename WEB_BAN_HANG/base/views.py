@@ -142,6 +142,7 @@ def userProfile(request, pk):
     pageView = 'updateProfile'
     user = User.objects.get(id=pk)
     form = UserForm(instance=user)
+    orders = Order.objects.filter(user_id=pk)
     reviews = user.review_set.all()
     sale_prods = Product.objects.filter(is_sale=True)[:9]
     if request.method == 'POST':
@@ -155,13 +156,18 @@ def userProfile(request, pk):
         else:
             messages.error(request,"Please correct the error below.")
             return redirect('user-profile', pk=user.id)
-    context = {'user': user, 'form': form, 'reviews': reviews, 'sale_prods':sale_prods, 'pageView':pageView}
+    context = {'user': user,
+                'form': form, 
+                'reviews': reviews,
+                'sale_prods':sale_prods,
+                'pageView':pageView,
+                'orders':orders}
     return render(request, 'base/main/profile.html', context)
 def updatePassword(request):
     if request.user.is_authenticated:
+        pageView = 'updatePassword'
         current_user = request.user
         sale_prods = Product.objects.filter(is_sale=True)[:9]
-        
         if request.method == 'POST':
             password_form = ChangePasswordForm(current_user, request.POST)
             old_password = request.POST['old_password']  
@@ -180,12 +186,27 @@ def updatePassword(request):
                 messages.error(request, 'Please correct your old password')
         else:
             password_form = ChangePasswordForm(current_user)
-            context = {'password_form':password_form, 'pageView':'updatePassword', 'sale_prods':sale_prods}
+            context = {'password_form':password_form, 'pageView':'updatePassword', 'sale_prods':sale_prods, 'pageView':pageView}
             return render(request, 'base/main/profile.html', context)
         return redirect('updatePassword')
     else:
         messages.warning(request, "You must be logged in to view this page.")
-        return redirect('loginPage')
+        return redirect('login')
+def orderDetail(request,pk):
+    if request.user.is_authenticated:
+        pageView = 'orderDetail'
+        order = Order.objects.get(id=pk)
+        items = order.orderitem_set.all()
+        sale_prods = Product.objects.filter(is_sale=True)[:9]
+        orders = Order.objects.filter(user=request.user)
+        reviews = request.user.review_set.all()
+    else:
+        messages.warning(request, 'You must log in first!')
+        return redirect('login')
+    context={'items':items,'order':order, 
+             'pageView':pageView, 'sale_prods':sale_prods,
+             'orders':orders, 'reviews':reviews}
+    return render(request, 'base/main/profile.html', context)
 #-------------------------Cart----------------------------
 def cart(request):
     if request.user.is_authenticated:
@@ -196,7 +217,6 @@ def cart(request):
         quantities = cart.get_quants()
         totals = cart.cart_total()
         item_total = cart.item_total()
-        #shipping address
     else:
         messages.error(request, 'Please login first!')
         return redirect('login')
@@ -247,8 +267,47 @@ def cartUpdate(request):
         response = JsonResponse({'qty': product_qty})
         messages.success(request,'Shopping cart have been updated!')
         return response
-    
+def checkout(request):
+    if request.user.is_authenticated:
+        user = request.user
+        cart = Cart(request)
+        cart_products = cart.get_prods()
+        cart_products = cart.get_prods()
+        quantities = cart.get_quants()
+        totals = cart.cart_total()
+        item_total = cart.item_total()
+        if request.method == "POST":
+            form = UserShippingForm(user, request.POST)
+            if form.is_valid():
+                form.save(user)
+                return redirect('checkout')
+        else:
+            form = UserShippingForm(user)
+        context = {'form': form,
+                   'cart_products':cart_products,
+                   'quantities':quantities,
+                   'totals':totals,
+                   'item_total':item_total}
+        return render(request, "base/main/checkout.html", context)
+    else:
+        messages.warning(request, "You must be logged in to view this page.")
+        return redirect('login')
+def createOrder(request):
+    if request.user.is_authenticated:
+        cart = Cart(request)
+        quantities = cart.get_quants()
+        order = Order.objects.create(user=request.user)
+        for product_id, quantity in quantities.items():
+            product = Product.objects.get(id=product_id)
+            items = OrderItem.objects.create(order=order, product=product,quantity=quantity)
+        cart.clear_cart()
+        messages.info(request,"Your order has been created")
+        return redirect("home")
+    else:
+        messages.error(request,"Please login first")
+        return redirect("login")
 
+        
 ###################### ADMIN SITE #########################
 def adminLogin(request):
     try:
@@ -276,7 +335,6 @@ def adminLogin(request):
         return render(request, 'base/admin/login.html')
     except Exception as e:
         print(e)
-
 def adminLogout(request):
     logout(request)
     return redirect('admin_login')
@@ -285,7 +343,12 @@ def adminLogout(request):
 def adminHome(request):
     customers = User.objects.filter(is_staff=False)
     invoices = Invoice.objects.filter(status=1)
-    context = {'customers':customers, 'invoices':invoices}
+    orders = Order.objects.filter(status=1)
+    sales = Order.objects.filter(status=4)
+    revenue = 0
+    for sale in sales:
+        revenue += sale.calculate_total_value()
+    context = {'customers':customers, 'invoices':invoices, 'orders':orders, 'sales':sales, 'revenue':revenue}
     return render(request, 'base/admin/home.html',context)
 ## Product
 @login_required(login_url='/super/login/')
@@ -563,6 +626,14 @@ def invoiceAdmin(request):
         invoices = Invoice.objects.filter(mutiple_q)
     else:
         invoices = Invoice.objects.all()
+    # filter by status
+    status_filter = request.GET.get('status')
+    if status_filter:
+        if status_filter == '0':
+            return redirect('invoiceAdmin')
+        else:
+            invoices = invoices.filter(status=status_filter)
+
     page = Paginator(invoices, 4)
     page_list = request.GET.get('page')
     page = page.get_page(page_list)
@@ -641,7 +712,7 @@ def render_to_pdf(template_scr, context_dict={}):
     if not pdf:
         return HttpResponse(result.getvalue(), content_type='application/pdf')
     return None
-class generatePDF(View):
+class generateInvoicePDF(View):
     @method_decorator(login_required(login_url='/super/login/'))
     def get(self, request,pk, *args,**kwargs):
         invoice = Invoice.objects.get(id=pk)
@@ -660,3 +731,82 @@ class generatePDF(View):
         response['Content-Disposition'] = content
         return response
 #----------------------------End Invoice------------------------------
+
+#----------------------------Start Order------------------------------
+@login_required(login_url='/super/login/')
+def orderAdmin(request):
+    pageView = 'read'
+    if 'q' in request.GET:
+        q = request.GET['q']
+        mutiple_q = Q( Q(user__username__icontains=q) | 
+                       Q(user__first_name__icontains=q) |
+                       Q(user__last_name__icontains=q))
+        orders = Order.objects.filter(mutiple_q)
+    else:
+        orders = Order.objects.all()
+    status_filter = request.GET.get('status')
+    if status_filter:
+        if status_filter == '0':
+            return redirect('orderAdmin')
+        else:
+            orders = orders.filter(status=status_filter)
+    page = Paginator(orders, 4)
+    page_list = request.GET.get('page')
+    page = page.get_page(page_list)
+
+    context = {'orders':orders, 'page':page, 'pageView':pageView}
+    return render(request, 'base/admin/order.html', context)
+@login_required(login_url='/super/login/')
+def orderDetail(request, pk):
+    pageView = 'detail'
+    order = Order.objects.get(id=pk)
+    order_value = order.calculate_total_value()
+    order_items = order.orderitem_set.all()
+    context = {'order_items':order_items, 'order':order, 'pageView':pageView, 'order_value': order_value}
+    return render(request, 'base/admin/order.html', context)
+@login_required(login_url='/super/login/')
+def updateOrderStatus(request,pk):
+    pageView = 'updateStatus'
+    order = Order.objects.get(id=pk)
+    if request.method == "POST":
+        status_form = ChangeOrderStatus(request.POST, instance=order)
+        if status_form.is_valid():
+            status_form.save()
+            return redirect('orderAdmin')
+    else:
+        status_form = ChangeOrderStatus(instance=order)
+    context = {"status_form":status_form, 'order':order, 'pageView':pageView}
+    return render(request, 'base/admin/order.html', context)
+@login_required(login_url='/super/login/')
+def deleteOrder(request, pk):
+    if request.user.is_superuser:
+        pageView = 'delete'
+        order = Order.objects.get(id=pk)
+        if request.method == 'POST':
+            order.delete()
+            messages.warning(request,'The selected order has been deleted!')
+            return redirect('orderAdmin')
+    else:
+        messages.error(request, 'You dont have that permit!!')
+        return redirect('admin_login')
+    return render(request,'base/admin/order.html',{'obj': order, 'pageView':pageView})
+class generateOrderPDF(View):
+    @method_decorator(login_required(login_url='/super/login/'))
+    def get(self, request,pk, *args,**kwargs):
+        order = Order.objects.get(id=pk)
+        items = order.orderitem_set.all()
+        address = order.user.shippingaddress_set.first()
+        context = {
+            'order': order,
+            'items': items,
+            'total': order.calculate_total_value(),
+            'address': address
+        }
+        html = render_to_string('base/admin/pdf_order.html', context)
+        pdf = BytesIO()
+        pisa.pisaDocument(BytesIO(html.encode("UTF-8")), pdf)
+        response = HttpResponse(pdf.getvalue(), content_type='application/pdf')
+        content = "invoice_{0}.pdf".format(order.id)
+        response['Content-Disposition'] = content
+        return response
+#----------------------------End Order------------------------------

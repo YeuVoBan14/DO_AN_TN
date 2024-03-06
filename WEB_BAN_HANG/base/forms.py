@@ -14,6 +14,20 @@ STATUS_CHOICES = (
     (3, 'Cancel'),
     (4, 'Delivered'),
 )
+CITY_CHOICES = (
+    ('hanoi', 'Hà Nội'),
+    ('danang', 'Đà Nẵng'),
+    ('hochiminh', "Hồ Chí Minh"),
+    ('thanhhoa', 'Thanh Hóa'),
+    ('thaibinh', "Thái Bình")
+)
+DISTRICT_CHOICES = (
+    ('haibatrung', 'Hai Bà Trưng'),
+    ('hoangmai', 'Hoàng Mai'),
+    ('badinh', 'Ba Đình'),
+    ('thanhxuan', 'Thanh Xuân'),
+    ('hoankiem', 'Hoàn Kiếm')
+)
 #for register new user(customer)
 class MyUserCreationForm(UserCreationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':"Username"}))
@@ -135,6 +149,11 @@ class ChangeInvoiceStatus(ModelForm):
     class Meta:
         model = Invoice
         fields = ['status']
+class ChangeOrderStatus(ModelForm):
+    status = forms.ChoiceField(choices=STATUS_CHOICES, widget=forms.Select(attrs={'class':"block w-full mt-1 text-sm dark:text-gray-300 dark:border-gray-600 dark:bg-gray-700 form-select focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:focus:shadow-outline-gray"}))
+    class Meta:
+        model = Order
+        fields = ['status']
 class CustomPasswordResetForm(PasswordResetForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -159,12 +178,44 @@ class CustomSetPasswordForm(SetPasswordForm):
             'placeholder': 'Confirm password',
             'onfocus': "this.placeholder = ''",
         })
-class ShippingForm(ModelForm):
-    class Meta:
-        model = ShippingAddress
-        fields = ['address', 'city', 'state', 'zipcode']
+class UserShippingForm(forms.Form):
+    first_name = forms.CharField(widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':"First Name"}))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':"Last Name"}))
+    phone = forms.CharField(widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':"Phone"}))
+    address = forms.CharField(widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':"Address"}))
+    zipcode = forms.CharField(widget=forms.TextInput(attrs={'class':'form-control', 'placeholder':"Zipcode"}))
+    city = forms.ChoiceField(choices=CITY_CHOICES, widget=forms.Select(attrs={'class':"country_select"}))
+    district = forms.ChoiceField(choices=DISTRICT_CHOICES, widget=forms.Select(attrs={'class':"country_select"}))
 
+    def __init__(self, user, *args, **kwargs):
+        super(UserShippingForm, self).__init__(*args, **kwargs)
+        shipping_address = user.shippingaddress_set.first()
+        self.fields['first_name'].initial = user.first_name
+        self.fields['last_name'].initial = user.last_name
+        self.fields['phone'].initial = user.phone
+        if shipping_address:
+            self.fields['city'].initial = shipping_address.city
+            self.fields['district'].initial = shipping_address.district
+            self.fields['address'].initial = shipping_address.address
+            self.fields['zipcode'].initial = shipping_address.zipcode
+        else:
+            # Khởi tạo giá trị mặc định cho các trường nếu không có địa chỉ vận chuyển được tìm thấy
+            self.fields['city'].initial = ""
+            self.fields['district'].initial = ""
+            self.fields['address'].initial = ""
+            self.fields['zipcode'].initial = ""
 
+    def save(self, user):
+        user.first_name = self.cleaned_data['first_name']
+        user.last_name = self.cleaned_data['last_name']
+        user.phone = self.cleaned_data['phone']  # Sửa dòng này để lưu số điện thoại
+        user.save()
+        shipping_address, created = user.shippingaddress_set.get_or_create(defaults={})
+        shipping_address.city = self.cleaned_data['city']
+        shipping_address.district = self.cleaned_data['district']
+        shipping_address.address = self.cleaned_data['address']
+        shipping_address.zipcode = self.cleaned_data['zipcode']
+        shipping_address.save()
 
         
 

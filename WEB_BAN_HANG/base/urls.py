@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import generatePDF
+from .views import generateInvoicePDF
 from django.contrib.auth import views as auth_views
 from .forms import CustomPasswordResetForm, CustomSetPasswordForm
 
@@ -43,10 +43,14 @@ urlpatterns = [
     path ('cart-delete/', views.cartDelete, name="cart_delete"),
     path ('cart-update/', views.cartUpdate, name="cart_update"),
 
+    path('checkout/', views.checkout, name="checkout"),
+    path('create-oder', views.createOrder, name="createOrder"),
+
     path('delete-review/<str:pk>', views.deleteReview, name="delete-review"),
 
     path('profile/<str:pk>', views.userProfile, name="user-profile"),
     path('update-password', views.updatePassword, name="updatePassword"),
+    path('order-detail/<str:pk>', views.orderDetail, name="orderDetail"),
 
 
     # path for admin
@@ -79,7 +83,14 @@ urlpatterns = [
     path('super/add-invoice-item/<str:suppiler>/<str:invoice_id>/', views.addInvoiceItem, name='addInvoiceItem'),
     path('super/invoice/change-status/<str:pk>', views.updateInvoiceStatus, name="updateInvoiceStatus"),
     path('super/delete-invoice/<str:pk>', views.deleteInvoice, name="deleteInvoice"),
-    path('super/invoice/generate-pdf/<str:pk>', views.generatePDF.as_view(), name="generatePDF"),
+    path('super/invoice/generate-pdf/<str:pk>', views.generateInvoicePDF.as_view(), name="generateInvoicePDF"),
+
+    path('super/order/', views.orderAdmin, name="orderAdmin"),
+    path('super/order/<int:pk>/', views.orderDetail, name='orderDetail'),
+    path('super/order/change-status/<str:pk>', views.updateOrderStatus, name="updateOrderStatus"),
+    path('super/delete-order/<str:pk>', views.deleteOrder, name="deleteOrder"),
+    path('super/order/generate-pdf/<str:pk>', views.generateOrderPDF.as_view(), name="generateOrderPDF"),
+
 
 
     path('test', views.test, name="test")
