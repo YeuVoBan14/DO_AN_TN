@@ -44,7 +44,7 @@ urlpatterns = [
     path ('cart-update/', views.cartUpdate, name="cart_update"),
 
     path('checkout/', views.checkout, name="checkout"),
-    path('create-oder', views.createOrder, name="createOrder"),
+    path('create-order', views.createOrder, name="createOrder"),
 
     path('delete-review/<str:pk>', views.deleteReview, name="delete-review"),
 

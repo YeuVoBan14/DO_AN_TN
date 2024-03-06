@@ -293,20 +293,23 @@ def checkout(request):
         messages.warning(request, "You must be logged in to view this page.")
         return redirect('login')
 def createOrder(request):
-    if request.user.is_authenticated:
-        cart = Cart(request)
-        quantities = cart.get_quants()
-        order = Order.objects.create(user=request.user)
-        for product_id, quantity in quantities.items():
-            product = Product.objects.get(id=product_id)
-            items = OrderItem.objects.create(order=order, product=product,quantity=quantity)
-        cart.clear_cart()
-        messages.info(request,"Your order has been created")
-        return redirect("home")
-    else:
-        messages.error(request,"Please login first")
-        return redirect("login")
-
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            quantities = request.POST.get('quantities')
+            quantities = json.loads(quantities)
+            order = Order.objects.create(user=request.user)
+            for product_id, quantity in quantities.items():
+                product = Product.objects.get(id=product_id)
+                OrderItem.objects.create(order=order, product=product,quantity=quantity)
+            messages.success(request,"Your order has been created")
+            # Clear the cart after successful order creation
+            cart = Cart(request)
+            cart.clear_cart()
+            return redirect("home")
+        
+        else:
+            messages.error(request,"Please login first")
+            return redirect("login")
         
 ###################### ADMIN SITE #########################
 def adminLogin(request):
