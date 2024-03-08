@@ -72,7 +72,7 @@
                     <td class="px-4 py-3">
                       {% if order.status == 1 or order.status == 2 %}
                       <button class="px-3 py-1 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-md active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
-                        <a href="#">Change</a>
+                        <a href="{% url "updateOrderStatus" order.id %}">Change</a>
                       </button>
                       {% elif request.user.is_superuser %}
                       <button class="px-3 py-1 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-md active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">

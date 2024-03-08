@@ -17,6 +17,8 @@ from django.views import View
 from xhtml2pdf import pisa
 from django.template.loader import render_to_string
 from django.utils.decorators import method_decorator
+from datetime import datetime, timedelta
+
 
 
 # Create your views here.
@@ -344,6 +346,42 @@ def adminLogout(request):
 
 @login_required(login_url='/super/login/')
 def adminHome(request):
+    #pie chart
+    labels = []
+    data = []
+    queryset = Suppiler.objects.all()
+    for suppiler in queryset:
+        products_count = Product.objects.filter(suppiler=suppiler).count()
+        data.append(products_count)
+        labels.append(suppiler.name)
+    #bar chart
+    labels1 = []
+    data1 = []
+    order_suppiler = Suppiler.objects.all()
+    for suppiler in order_suppiler:
+        # Filter orders for the current supplier
+        supplier_orders = Order.objects.filter(status=4, orderitem__product__suppiler=suppiler)
+
+        # Calculate total revenue for this supplier
+        supplier_revenue = 0
+        for order in supplier_orders:
+            for item in order.orderitem_set.all():
+                if item.product.suppiler == suppiler:
+                    supplier_revenue += item.item_total()
+        labels1.append(suppiler.name)
+        data1.append(supplier_revenue)
+    # monthly revenue
+    if request.method == 'POST':
+        selected_year = request.POST.get('selected_year')
+        if selected_year:
+            orders = Order.objects.filter(status=4, created__year=selected_year)
+        else:
+        # Get current year
+            current_year = datetime.now().year
+            orders = Order.objects.filter(status=4, created__year=current_year)
+        monthly_revenue = calculate_monthly_revenue(orders)
+        data2_values = [int(value) for value in monthly_revenue.values()]
+    data1_int = [int(d) for d in data1]
     customers = User.objects.filter(is_staff=False)
     invoices = Invoice.objects.filter(status=1)
     orders = Order.objects.filter(status=1)
@@ -351,8 +389,20 @@ def adminHome(request):
     revenue = 0
     for sale in sales:
         revenue += sale.calculate_total_value()
-    context = {'customers':customers, 'invoices':invoices, 'orders':orders, 'sales':sales, 'revenue':revenue}
+    context = {'customers':customers, 'invoices':invoices, 
+               'orders':orders, 'sales':sales, 
+               'revenue':revenue,
+               'data':data, 'labels':labels,
+               'data1_int':data1_int, 'labels1':labels1,
+               'data2_values':data2_values}
     return render(request, 'base/admin/home.html',context)
+def calculate_monthly_revenue(orders):
+  monthly_revenue = {month: 0 for month in range(1, 13)}  # Initialize all months with 0
+  for order in orders:
+    order_month = order.created.month
+    order_revenue = order.calculate_total_value()
+    monthly_revenue[order_month] += order_revenue
+  return monthly_revenue
 ## Product
 @login_required(login_url='/super/login/')
 def productAdmin(request):
