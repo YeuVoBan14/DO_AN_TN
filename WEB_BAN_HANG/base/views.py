@@ -372,6 +372,7 @@ def adminHome(request):
         data1.append(supplier_revenue)
     # monthly revenue
     data2_values = []
+    selected_year = ''
     if request.method == 'POST':
         selected_year = request.POST.get('selected_year')
         if selected_year:
