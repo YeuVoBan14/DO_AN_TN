@@ -371,12 +371,12 @@ def adminHome(request):
         labels1.append(suppiler.name)
         data1.append(supplier_revenue)
     # monthly revenue
+    data2_values = []
     if request.method == 'POST':
         selected_year = request.POST.get('selected_year')
         if selected_year:
             orders = Order.objects.filter(status=4, created__year=selected_year)
         else:
-        # Get current year
             current_year = datetime.now().year
             orders = Order.objects.filter(status=4, created__year=current_year)
         monthly_revenue = calculate_monthly_revenue(orders)
@@ -394,7 +394,7 @@ def adminHome(request):
                'revenue':revenue,
                'data':data, 'labels':labels,
                'data1_int':data1_int, 'labels1':labels1,
-               'data2_values':data2_values}
+               'data2_values':data2_values, 'selected_year':selected_year}
     return render(request, 'base/admin/home.html',context)
 def calculate_monthly_revenue(orders):
   monthly_revenue = {month: 0 for month in range(1, 13)}  # Initialize all months with 0

@@ -120,11 +120,12 @@
 
             <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800" style="position: relative; ">
                 <h4 class="mb-4 font-semibold text-gray-800 dark:text-gray-300">
-                    Monthly Revenue
+                    Monthly Revenue of {{selected_year}}
                 </h4>
                 <form method="post" style="display: flex;">
                     {% csrf_token %}
                     <select style="width:200px;" name="year" id="year" class="block w-full mt-1 text-sm dark:text-gray-300 dark:border-gray-600 dark:bg-gray-700 form-select focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:focus:shadow-outline-gray">
+                        <option value="">----</option>
                     </select>
                     <input type="hidden" name="selected_year" id="selected_year">
                     <button style="margin: 0 20px;" type="submit" class="px-3 py-1 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-md active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
@@ -233,17 +234,19 @@
     const selectedYearInput = document.getElementById('selected_year');
     const today = new Date();
     const currentYear = today.getFullYear();
+    
+    // Generate options for the past 3 years (inclusive)
     for (let i = currentYear - 3; i <= currentYear; i++) {
-    const option = document.createElement('option');
-    option.value = i;
-    option.textContent = i;
-    yearSelect.appendChild(option);
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = i;
+      yearSelect.appendChild(option);
     }
-    yearSelect.value = currentYear;
-    selectedYearInput.value = currentYear; // This line is added
+    yearSelect.value = ""; 
+    selectedYearInput.value = currentYear;
     yearSelect.addEventListener('change', function() {
-    const selectedValue = this.value;
-    selectedYearInput.value = selectedValue; // Update hidden input on selection change
+      const selectedValue = this.value;
+      selectedYearInput.value = selectedValue;
     });
-</script>
+    </script>
 {% endblock content %}
