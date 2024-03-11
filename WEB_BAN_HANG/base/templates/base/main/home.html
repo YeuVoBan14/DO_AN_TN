@@ -9,45 +9,26 @@
                         <div class="col-lg-12">
                                 <div class="active-banner-slider owl-carousel">
                                         <!-- single-slide -->
+                                        {% for product in banner_prods %}
                                         <div class="row single-slide align-items-center d-flex">
                                                 <div class="col-lg-5 col-md-6">
                                                         <div class="banner-content">
-                                                                <h1>Nike New <br>Collection!</h1>
-                                                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
-                                                                        incididunt ut labore et
-                                                                        dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.</p>
+                                                                <h1>Yonex Shoe Collection</h1>
+                                                                <h2>{{product.name}}</h2>
+                                                                <p>{{product.description|truncatechars:200}}</p>
                                                                 <div class="add-bag d-flex align-items-center">
-                                                                        <a class="add-btn" href=""><span class="lnr lnr-cross"></span></a>
-                                                                        <span class="add-text text-uppercase">Add to Bag</span>
+                                                                        <a class="add-btn" href="{% url "product" product.id %}"><span class="lnr lnr-cross"></span></a>
+                                                                        <span class="add-text text-uppercase">View More</span>
                                                                 </div>
                                                         </div>
                                                 </div>
                                                 <div class="col-lg-7">
                                                         <div class="banner-img">
-                                                                <img class="img-fluid" src="static/media/banner/banner-img.png" alt="">
+                                                                <img class="img-fluid" src="{{product.ImageURL}}" alt="">
                                                         </div>
                                                 </div>
                                         </div>
-                                        <!-- single-slide -->
-                                        <div class="row single-slide">
-                                                <div class="col-lg-5">
-                                                        <div class="banner-content">
-                                                                <h1>Nike New <br>Collection!</h1>
-                                                                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
-                                                                        incididunt ut labore et
-                                                                        dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.</p>
-                                                                <div class="add-bag d-flex align-items-center">
-                                                                        <a class="add-btn" href=""><span class="lnr lnr-cross"></span></a>
-                                                                        <span class="add-text text-uppercase">Add to Bag</span>
-                                                                </div>
-                                                        </div>
-                                                </div>
-                                                <div class="col-lg-7">
-                                                        <div class="banner-img">
-                                                                <img class="img-fluid" src="static/media/banner/banner-img.png"alt="">
-                                                        </div>
-                                                </div>
-                                        </div>
+                                        {% endfor %}
                                 </div>
                         </div>
                 </div>
@@ -86,14 +67,14 @@
         <div class="single-product-slider">
                 <div class="container">
                         <div class="row">
-
                                 {% for product in page.object_list %}
                                 <!-- single product -->
                                 <div class="col-lg-3 col-md-6">
                                         <div class="single-product" style="position: relative;">
                                                 <div class="product-image" style="position: relative; overflow: hidden;">
+                                                        <div style="background: #c0d6df;">
                                                         <a href="{% url 'product' product.id %}"><img class="img-fluid" src="{{product.ImageURL}}" alt=""
-                                                                style="display: block; width: 100% ; height: auto;" /></a>
+                                                                style="display: block; width: 100% ; height: auto;" /></a></div>
                                                         {% if product.sale_price != 0.00 %}
                                                         <div class="sale-tag">
                                                                 <h6 style="position: absolute; top: 10px; right: 10px; background-color: #ff0000; color: #ffff; font-size: 14px; padding: 5px 10px; border-radius: 3px; z-index: 1; text-transform: uppercase;">sale</h6>
@@ -179,6 +160,5 @@
 <!-- End related-product Area -->
 <!-- Start brand Area -->
 {% include 'base/main/brands.html' %}
-<!-- End brand Area -->
-
+<!-- End brand Area -->       
 {% endblock content %}

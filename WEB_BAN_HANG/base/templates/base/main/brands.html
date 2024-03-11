@@ -2,18 +2,11 @@
 <section class="brand-area section_gap section_gap_bottom">
     <div class="container">
             <div class="row">
+                {% for logo in logoes %}
                     <a class="col single-img" href="#">
-                            <img class="img-fluid d-block mx-auto" src="{% static "media/banner/brand/1.png" %}" alt="">
+                            <img class="img-fluid d-block mx-auto" src="{{logo.ImageURL}}" alt="">
                     </a>
-                    <a class="col single-img" href="#">
-                            <img class="img-fluid d-block mx-auto" src="{% static "media/banner/brand/2.png" %}" alt="">
-                    </a>
-                    <a class="col single-img" href="#">
-                            <img class="img-fluid d-block mx-auto" src="{% static "media/banner/brand/3.png" %}" alt="">
-                    </a>
-                    <a class="col single-img" href="#">
-                            <img class="img-fluid d-block mx-auto" src="{% static "media/banner/brand/4.png" %}" alt="">
-                    </a>
+                {% endfor %}
             </div>
     </div>
 </section>

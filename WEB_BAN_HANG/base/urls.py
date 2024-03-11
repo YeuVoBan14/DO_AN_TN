@@ -33,7 +33,11 @@ urlpatterns = [
          auth_views.PasswordResetCompleteView.as_view(template_name="base/main/reset_pass/password_reset_done.html"),
          name="password_reset_complete"),
 
-    #end
+    #end for got button
+
+    #url for botchat
+    path('getResponse', views.getResponse, name='getResponse'),
+    #end botchat
 
     path('', views.home, name="home"),
     path('product/<str:pk>/', views.productPage, name='product'),
@@ -50,7 +54,7 @@ urlpatterns = [
 
     path('profile/<str:pk>', views.userProfile, name="user-profile"),
     path('update-password', views.updatePassword, name="updatePassword"),
-    path('order-detail/<str:pk>', views.orderDetail, name="orderDetail"),
+    path('order-detail/<str:pk>', views.orderDetailMain, name="orderDetailMain"),
 
 
     # path for admin
@@ -90,6 +94,12 @@ urlpatterns = [
     path('super/order/change-status/<str:pk>', views.updateOrderStatus, name="updateOrderStatus"),
     path('super/delete-order/<str:pk>', views.deleteOrder, name="deleteOrder"),
     path('super/order/generate-pdf/<str:pk>', views.generateOrderPDF.as_view(), name="generateOrderPDF"),
+
+    path('super/staff/', views.staffAdmin, name="staffAdmin"),
+    path('super/add-staff/', views.addStaff, name="addStaff"),
+    path('super/update-staff/<str:pk>', views.updateStaff, name="updateStaff"),
+    path('super/update-staff-password/<str:pk>', views.updateStaffPassword, name="updateStaffPassword"),
+    path('super/delete-staff/<str:pk>', views.deleteStaff, name="deleteStaff"),
 
 
 

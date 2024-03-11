@@ -82,7 +82,9 @@ def registerPage(request):
             messages.error(request, 'An error occured during registration')
     context = {'form': form}
     return render(request, 'base/main/login_register.html', context)
-
+def getResponse(request):
+    userMessage = request.GET.get('userMessage')
+    return HttpResponse(userMessage)
 def home(request):
     # search function
     if 'q' in request.GET:
@@ -102,7 +104,12 @@ def home(request):
     cats = Category.objects.filter(parent__isnull=True).order_by('name')
     suppilers = Suppiler.objects.all()
     sale_prods = Product.objects.filter(is_sale=True)[:9]
-    context = {'products':products,'page':page, 'cats':cats, 'suppilers':suppilers, 'sale_prods': sale_prods}
+    banner_prods = Product.objects.filter(cat__name='Yonex Shoe')
+    logoes = Suppiler.objects.all()
+    context = {'products':products,'page':page, 
+               'cats':cats, 'suppilers':suppilers, 
+               'sale_prods': sale_prods, 'banner_prods':banner_prods, 
+               'logoes':logoes}
     return render(request, 'base/main/home.html', context)
 
 def productPage(request, pk):
@@ -111,6 +118,7 @@ def productPage(request, pk):
     product_review_len = len(product_reviews)
     overall_score = sum(review.rating for review in product_reviews if review.rating is not None) / (len(product_reviews)) if product_reviews else 0
     sale_prods = Product.objects.filter(is_sale=True)[:9]
+    logoes = Suppiler.objects.all()
     if request.method == 'POST':
         rating = request.POST.get('rating')
         body = request.POST.get('body')
@@ -127,7 +135,9 @@ def productPage(request, pk):
             )
             messages.success(request, "Review added successfully.")
             return redirect('product',pk=product.id)
-    context = {'product': product, 'product_reviews':product_reviews, 'overall_score':overall_score, 'product_review_len': product_review_len, 'sale_prods':sale_prods}
+    context = {'product': product, 'product_reviews':product_reviews, 
+               'overall_score':overall_score, 'product_review_len': product_review_len, 
+               'sale_prods':sale_prods, 'logoes':logoes}
     return render(request,'base/main/product.html',context)
 
 def deleteReview(request,pk):
@@ -147,6 +157,7 @@ def userProfile(request, pk):
     orders = Order.objects.filter(user_id=pk)
     reviews = user.review_set.all()
     sale_prods = Product.objects.filter(is_sale=True)[:9]
+    logoes = Suppiler.objects.all()
     if request.method == 'POST':
         form = UserForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
@@ -163,13 +174,14 @@ def userProfile(request, pk):
                 'reviews': reviews,
                 'sale_prods':sale_prods,
                 'pageView':pageView,
-                'orders':orders}
+                'orders':orders, 'logoes':logoes}
     return render(request, 'base/main/profile.html', context)
 def updatePassword(request):
     if request.user.is_authenticated:
         pageView = 'updatePassword'
         current_user = request.user
         sale_prods = Product.objects.filter(is_sale=True)[:9]
+        logoes = Suppiler.objects.all()
         if request.method == 'POST':
             password_form = ChangePasswordForm(current_user, request.POST)
             old_password = request.POST['old_password']  
@@ -188,18 +200,21 @@ def updatePassword(request):
                 messages.error(request, 'Please correct your old password')
         else:
             password_form = ChangePasswordForm(current_user)
-            context = {'password_form':password_form, 'pageView':'updatePassword', 'sale_prods':sale_prods, 'pageView':pageView}
+            context = {'password_form':password_form, 'pageView':'updatePassword', 
+                       'sale_prods':sale_prods, 'pageView':pageView,
+                       'logoes':logoes}
             return render(request, 'base/main/profile.html', context)
         return redirect('updatePassword')
     else:
         messages.warning(request, "You must be logged in to view this page.")
         return redirect('login')
-def orderDetail(request,pk):
+def orderDetailMain(request,pk):
     if request.user.is_authenticated:
         pageView = 'orderDetail'
         order = Order.objects.get(id=pk)
         items = order.orderitem_set.all()
         sale_prods = Product.objects.filter(is_sale=True)[:9]
+        logoes = Suppiler.objects.all()
         orders = Order.objects.filter(user=request.user)
         reviews = request.user.review_set.all()
     else:
@@ -207,7 +222,8 @@ def orderDetail(request,pk):
         return redirect('login')
     context={'items':items,'order':order, 
              'pageView':pageView, 'sale_prods':sale_prods,
-             'orders':orders, 'reviews':reviews}
+             'orders':orders, 'reviews':reviews,
+             'logoes':logoes}
     return render(request, 'base/main/profile.html', context)
 #-------------------------Cart----------------------------
 def cart(request):
@@ -216,6 +232,7 @@ def cart(request):
         cart = Cart(request)
         cart_products = cart.get_prods()
         sale_prods = Product.objects.filter(is_sale=True)[:9]
+        logoes = Suppiler.objects.all()
         quantities = cart.get_quants()
         totals = cart.cart_total()
         item_total = cart.item_total()
@@ -226,7 +243,8 @@ def cart(request):
                'quantities':quantities, 
                'totals':totals, 
                'item_total':item_total, 
-               'sale_prods': sale_prods}
+               'sale_prods': sale_prods,
+               'logoes':logoes}
     return render(request, 'base/main/cart.html', context)
 
 def cartAdd(request):
@@ -518,6 +536,7 @@ def addSuppiler(request):
         form = SuppilerForm(request.POST)
         if form.is_valid():
             suppiler = form.save(commit=False)
+            #when adding cat, you will add many, so commit false, take the data and set it later
             categories = form.cleaned_data['cat']
             if len(suppiler.phone) != 10:
                 messages.error(request, "Phone number must have exactly 10 digits.")
@@ -864,3 +883,95 @@ class generateOrderPDF(View):
         response['Content-Disposition'] = content
         return response
 #----------------------------End Order------------------------------
+#----------------------------start staff------------------------------
+@login_required(login_url="/super/login/")
+def staffAdmin(request):
+    pageView = 'read'
+    if request.user.is_superuser:  
+        if 'q' in request.GET:
+            q = request.GET['q']
+            mutiple_q = Q( Q(username__icontains=q) | 
+                        Q(first_name__icontains=q) |
+                        Q(last_name__icontains=q) |
+                        Q(email__icontains=q))
+            user = User.objects.filter(is_staff=True).filter(mutiple_q)
+        else:
+            user = User.objects.filter(is_staff=True)
+        page = Paginator(user, 4)
+        page_list = request.GET.get('page')
+        page = page.get_page(page_list)
+    else:
+        messages.error(request, 'You dont have permit to do that!!')
+        user = None
+        page = None
+    context = {'user':user, 'page':page, 'pageView':pageView}
+    return render(request, 'base/admin/staff.html', context)
+@login_required(login_url="/super/login/")
+def addStaff(request):
+    pageView = 'add'
+    form = StaffForm()
+    if request.method == 'POST':
+        form = StaffForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            if len(user.phone) != 10:
+                messages.warning(request, 'Phone number must be 10 digits!')
+                return redirect('addStaff')
+            else:
+                user.save()
+                messages.success(request, "Successfully added a new staff!")
+                return redirect("staffAdmin")
+    context = { "form": form, 'pageView': pageView }
+    return render(request, 'base/admin/staff.html', context)
+@login_required(login_url='/super/login/')
+def updateStaff(request,pk):
+    pageView = 'edit'
+    user = User.objects.get(id=pk)
+    form = UpdateStaffForm(instance=user)
+    if request.method == 'POST':
+        form = UpdateStaffForm(request.POST, instance=user)
+        if form.is_valid():
+            user = form.save(commit=False)
+            if len(user.phone) != 10:
+                messages.error(request, "Phone number must have exactly 10 digits.")
+                return redirect("updateStaff", pk=user.id)
+            else:
+                form.save()
+                instance = form.instance
+                form = UpdateStaffForm(instance=instance)
+                messages.success(request,"Your staff has been updated")
+            return redirect("staffAdmin")
+        else:
+            messages.error(request,"Please correct the error below.")
+            return redirect('updateStaff', pk=user.id)
+    context = {'form':form, 'pageView':pageView}
+    return render(request, 'base/admin/staff.html', context)
+@login_required(login_url='/super/login/')
+def updateStaffPassword(request, pk):
+    pageView = 'editPassword'
+    user = User.objects.get(id=pk)
+    
+    if request.method == 'POST':
+        form = UpdateStaffPasswordForm(user, request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your password has been updated")
+            return redirect("staffAdmin")
+        else:
+            for error in list(form.errors.values()):
+                messages.error(request, error)
+            return redirect('updateStaffPassword', pk=pk)
+    else:
+        form = UpdateStaffPasswordForm(user=user)
+    
+    context = {'form': form, 'pageView': pageView}
+    return render(request, 'base/admin/staff.html', context)
+@login_required(login_url='/super/login/')
+def deleteStaff(request, pk):
+    pageView = 'delete'
+    user = User.objects.get(id=pk)
+    if request.method == 'POST':
+        user.delete()
+        messages.warning(request,'The selected staff has been deleted!')
+        return redirect('staffAdmin')
+    return render(request,'base/admin/staff.html',{'obj': user, 'pageView':pageView})

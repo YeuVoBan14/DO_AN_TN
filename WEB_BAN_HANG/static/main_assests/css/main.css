@@ -8,6 +8,9 @@
 /* Wide Mobile Layout: 480px */
 /* Section Gaps css
 ============================================================================================ */
+body{
+  overflow-x: hidden;
+}
 .no-padding {
   padding: 0;
 }

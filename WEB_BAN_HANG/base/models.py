@@ -52,10 +52,18 @@ class Suppiler(models.Model):
     phone = models.CharField(max_length=10)
     address = models.TextField()
     cat = models.ManyToManyField(Category,blank=True)
+    image = models.ImageField(null=True,blank=True,default="suppiler/defaultlogo.png",upload_to='suppiler')
     updated = models.DateTimeField(auto_now=True)
     # created = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return self.name
+    @property
+    def ImageURL(self):
+        try:
+            url = self.image.url
+        except:
+            url = ''
+        return url
 class Product(models.Model):
     name = models.CharField(max_length=200)
     cat = models.ForeignKey(Category,on_delete=models.SET_NULL,null=True)
