@@ -19,8 +19,6 @@ from django.template.loader import render_to_string
 from django.utils.decorators import method_decorator
 from datetime import datetime, timedelta
 
-
-
 # Create your views here.
 def test(request):
     return render(request, 'base/admin/pdf_invoice.html')
