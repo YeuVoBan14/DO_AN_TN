@@ -15,4 +15,3 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'WEB_BAN_HANG.settings')
 
 application = get_wsgi_application()
 
-app = application
