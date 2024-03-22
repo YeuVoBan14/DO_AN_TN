@@ -215,7 +215,3 @@ def update_order_product_quantity(sender, instance, **kwargs):
                 product = item.product
                 product.quantity -= item.quantity
                 product.save()
-
-
-
-

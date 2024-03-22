@@ -38,9 +38,10 @@
         $('#textInput').val("");
         $('#chatbot').append(userHTML);
         $.get('/getResponse',{userMessage:userText}).done(function(data){
-            var returnedMessage = "<li class='chat incoming'><span class='material-symbols-outlined'><i class='fa fa-flickr' aria-hidden='true'></i></span><p>"+data+"</p></li><br><br>"
+            var returnedMessage = "<li class='chat incoming'><span class='material-symbols-outlined'><i class='fa fa-flickr' aria-hidden='true'></i></span><p>"+data+"</p></li>"
             $('#chatbot').append(returnedMessage);
-        })
+
+        });      
     }
     $('#buttonInput').click(function(){
         getUserResponse();

@@ -18,6 +18,7 @@ from xhtml2pdf import pisa
 from django.template.loader import render_to_string
 from django.utils.decorators import method_decorator
 from datetime import datetime, timedelta
+from .chatbot import get_response
 
 # Create your views here.
 def test(request):
@@ -82,14 +83,14 @@ def registerPage(request):
     return render(request, 'base/main/login_register.html', context)
 def getResponse(request):
     userMessage = request.GET.get('userMessage')
-    return HttpResponse(userMessage)
+    response = get_response(userMessage)
+    return HttpResponse(response)
 def home(request):
     # search function
     if 'q' in request.GET:
         q = request.GET['q']
         mutiple_q = Q(  Q(cat__name__icontains=q)|
                         Q(name__contains=q)|
-                        Q(suppiler__name__icontains=q)|
                         Q(suppiler__name__icontains=q) )
         products = Product.objects.filter(mutiple_q)
     else:
