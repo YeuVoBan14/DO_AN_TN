@@ -331,9 +331,16 @@ def createOrder(request):
             return redirect("login")
         
 ###################### ADMIN SITE #########################
+def staff_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated or not request.user.is_staff:
+            messages.error(request,"You are not allow to do that action!")
+            return redirect('admin_login')
+        return view_func(request, *args, **kwargs)
+    return wrapper
 def adminLogin(request):
     try:
-        if request.user.is_authenticated:
+        if request.user.is_authenticated and request.user.is_staff:
             return redirect('adminHome')
         
         if request.method == 'POST':
@@ -361,6 +368,7 @@ def adminLogout(request):
     logout(request)
     return redirect('admin_login')
 
+@staff_required
 @login_required(login_url='/super/login/')
 def adminHome(request):
     #pie chart
@@ -422,6 +430,7 @@ def calculate_monthly_revenue(orders):
     monthly_revenue[order_month] += order_revenue
   return monthly_revenue
 ## Product
+@staff_required
 @login_required(login_url='/super/login/')
 def productAdmin(request):
     pageView = 'read'
@@ -440,6 +449,7 @@ def productAdmin(request):
 
     context = {'products': products, 'page': page, 'pageView':pageView}
     return render(request, 'base/admin/product.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def addProduct(request):
     pageView = 'add'
@@ -467,6 +477,7 @@ def addProduct(request):
                 return redirect("productAdmin")
     context = { "form": form, 'pageView': pageView }
     return render(request, 'base/admin/product.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def updateProduct(request, pk):
     pageView = 'edit'
@@ -499,6 +510,7 @@ def updateProduct(request, pk):
             return redirect('updateProduct', pk=product.id)
     context = {'form':form, 'pageView':pageView}
     return render(request, 'base/admin/product.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def deleteProduct(request, pk):
     pageView = 'delete'
@@ -510,6 +522,7 @@ def deleteProduct(request, pk):
     return render(request,'base/admin/product.html',{'obj': product, 'pageView':pageView})
 
 ## Suppiler
+@staff_required
 @login_required(login_url='/super/login/')
 def suppilerAdmin(request):
     pageView = 'read'
@@ -527,6 +540,7 @@ def suppilerAdmin(request):
 
     context = {'suppilers': suppilers,'page':page, 'pageView':pageView}
     return render(request, 'base/admin/suppiler.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def addSuppiler(request):
     pageView = 'add'
@@ -548,6 +562,7 @@ def addSuppiler(request):
                 return redirect("suppilerAdmin")
     context = { "form": form, 'pageView': pageView }
     return render(request, 'base/admin/suppiler.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def updateSuppiler(request, pk):
     pageView = 'edit'
@@ -574,6 +589,7 @@ def updateSuppiler(request, pk):
             return redirect('updateSuppiler', pk=product.id)
     context = {'form':form, 'pageView':pageView}
     return render(request, 'base/admin/suppiler.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def deleteSuppiler(request, pk):
     pageView = 'delete'
@@ -584,6 +600,7 @@ def deleteSuppiler(request, pk):
         return redirect('suppilerAdmin')
     return render(request,'base/admin/product.html',{'obj': suppiler, 'pageView':pageView})
 #------------------------------CATEGORIES----------------
+@staff_required
 @login_required(login_url="/super/login/")
 def categoryAdmin(request):
     pageView = 'read'
@@ -599,6 +616,7 @@ def categoryAdmin(request):
 
     context = {'categories': categories,'page':page, 'pageView':pageView}
     return render(request, 'base/admin/category.html', context)
+@staff_required
 @login_required(login_url="/super/login/")
 def addCategory(request):
     pageView = 'add'
@@ -611,6 +629,7 @@ def addCategory(request):
             return redirect("categoryAdmin")
     context = { "form": form, 'pageView': pageView }
     return render(request, 'base/admin/category.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def updateCategory(request, pk):
     pageView = 'edit'
@@ -629,6 +648,7 @@ def updateCategory(request, pk):
             return redirect('updateCategory', pk=category.id)
     context = {'form':form, 'pageView':pageView}
     return render(request, 'base/admin/category.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def deleteCategory(request, pk):
     pageView = 'delete'
@@ -639,6 +659,7 @@ def deleteCategory(request, pk):
         return redirect('categoryAdmin')
     return render(request,'base/admin/product.html',{'obj': category, 'pageView':pageView})
 #----------------------------Customer------------------------------
+@staff_required
 @login_required(login_url='/super/login/')
 def customerAdmin(request):
     pageView = 'read'
@@ -656,6 +677,7 @@ def customerAdmin(request):
     page = page.get_page(page_list)
     context = {'customers':customers, 'page':page, 'pageView':pageView}
     return render(request, 'base/admin/customer.html',context)
+@staff_required
 @login_required(login_url='/super/login/')
 def updateCustomer(request,pk):
     pageView = 'edit'
@@ -679,6 +701,7 @@ def updateCustomer(request,pk):
             return redirect('updateCustomer', pk=customer.id)
     context = {'form':form, 'pageView':pageView}
     return render(request, 'base/admin/customer.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def deleteCustomer(request, pk):
     pageView = 'delete'
@@ -689,6 +712,7 @@ def deleteCustomer(request, pk):
         return redirect('customerAdmin')
     return render(request,'base/admin/customer.html',{'obj': customer, 'pageView':pageView})
 #----------------------------Invoice------------------------------
+@staff_required
 @login_required(login_url='/super/login/')
 def invoiceAdmin(request):
     pageView = 'read'
@@ -712,6 +736,7 @@ def invoiceAdmin(request):
 
     context = {'invoices':invoices, 'page':page, 'pageView':pageView}
     return render(request, 'base/admin/invoice.html',context)
+@staff_required
 @login_required(login_url='/super/login/')
 def invoiceDetail(request, pk):
     pageView = 'detail'
@@ -720,6 +745,7 @@ def invoiceDetail(request, pk):
     invoice_items = invoice.invoiceitem_set.all()
     context = {'invoice_items':invoice_items, 'invoice':invoice, 'pageView':pageView, 'invoice_value': invoice_value}
     return render(request, 'base/admin/invoice.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def addInvoice(request):
     pageView = 'addSuppiler'
@@ -734,6 +760,7 @@ def addInvoice(request):
         suppiler_form = InvoiceForm()
     context = {'suppiler_form':suppiler_form, 'pageView':pageView}
     return render(request, 'base/admin/invoice.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def addInvoiceItem(request, suppiler, invoice_id):
     pageView = 'addInvoiceItem'
@@ -753,6 +780,7 @@ def addInvoiceItem(request, suppiler, invoice_id):
         return redirect('invoiceDetail', pk=invoice.pk)
     context = {'products': products, 'pageView':pageView}
     return render(request, 'base/admin/invoice.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def updateInvoiceStatus(request,pk):
     pageView = 'updateStatus'
@@ -766,6 +794,7 @@ def updateInvoiceStatus(request,pk):
         status_form = ChangeInvoiceStatus(instance=invoice)
     context = {"status_form":status_form, 'invoice':invoice, 'pageView':pageView}
     return render(request, 'base/admin/invoice.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def deleteInvoice(request, pk):
     pageView = 'delete'
@@ -775,6 +804,7 @@ def deleteInvoice(request, pk):
         messages.warning(request,'The selected invoice has been deleted!')
         return redirect('invoiceAdmin')
     return render(request,'base/admin/invoice.html',{'obj': invoice, 'pageView':pageView})
+@staff_required
 @login_required(login_url='/super/login/')
 def render_to_pdf(template_scr, context_dict={}):
     template = get_template(template_scr)
@@ -805,6 +835,7 @@ class generateInvoicePDF(View):
 #----------------------------End Invoice------------------------------
 
 #----------------------------Start Order------------------------------
+@staff_required
 @login_required(login_url='/super/login/')
 def orderAdmin(request):
     pageView = 'read'
@@ -828,6 +859,7 @@ def orderAdmin(request):
 
     context = {'orders':orders, 'page':page, 'pageView':pageView}
     return render(request, 'base/admin/order.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def orderDetail(request, pk):
     pageView = 'detail'
@@ -836,6 +868,7 @@ def orderDetail(request, pk):
     order_items = order.orderitem_set.all()
     context = {'order_items':order_items, 'order':order, 'pageView':pageView, 'order_value': order_value}
     return render(request, 'base/admin/order.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def updateOrderStatus(request,pk):
     pageView = 'updateStatus'
@@ -849,6 +882,7 @@ def updateOrderStatus(request,pk):
         status_form = ChangeOrderStatus(instance=order)
     context = {"status_form":status_form, 'order':order, 'pageView':pageView}
     return render(request, 'base/admin/order.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def deleteOrder(request, pk):
     if request.user.is_superuser:
@@ -864,6 +898,7 @@ def deleteOrder(request, pk):
     return render(request,'base/admin/order.html',{'obj': order, 'pageView':pageView})
 class generateOrderPDF(View):
     @method_decorator(login_required(login_url='/super/login/'))
+    @method_decorator(staff_required)
     def get(self, request,pk, *args,**kwargs):
         order = Order.objects.get(id=pk)
         items = order.orderitem_set.all()
@@ -883,6 +918,7 @@ class generateOrderPDF(View):
         return response
 #----------------------------End Order------------------------------
 #----------------------------start staff------------------------------
+@staff_required
 @login_required(login_url="/super/login/")
 def staffAdmin(request):
     pageView = 'read'
@@ -905,6 +941,7 @@ def staffAdmin(request):
         page = None
     context = {'user':user, 'page':page, 'pageView':pageView}
     return render(request, 'base/admin/staff.html', context)
+@staff_required
 @login_required(login_url="/super/login/")
 def addStaff(request):
     pageView = 'add'
@@ -922,6 +959,7 @@ def addStaff(request):
                 return redirect("staffAdmin")
     context = { "form": form, 'pageView': pageView }
     return render(request, 'base/admin/staff.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def updateStaff(request,pk):
     pageView = 'edit'
@@ -945,6 +983,7 @@ def updateStaff(request,pk):
             return redirect('updateStaff', pk=user.id)
     context = {'form':form, 'pageView':pageView}
     return render(request, 'base/admin/staff.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def updateStaffPassword(request, pk):
     pageView = 'editPassword'
@@ -965,6 +1004,7 @@ def updateStaffPassword(request, pk):
     
     context = {'form': form, 'pageView': pageView}
     return render(request, 'base/admin/staff.html', context)
+@staff_required
 @login_required(login_url='/super/login/')
 def deleteStaff(request, pk):
     pageView = 'delete'
