@@ -92,7 +92,6 @@ urlpatterns = [
     path('super/order/', views.orderAdmin, name="orderAdmin"),
     path('super/order/<int:pk>/', views.orderDetail, name='orderDetail'),
     path('super/order/change-status/<str:pk>', views.updateOrderStatus, name="updateOrderStatus"),
-    path('super/delete-order/<str:pk>', views.deleteOrder, name="deleteOrder"),
     path('super/order/generate-pdf/<str:pk>', views.generateOrderPDF.as_view(), name="generateOrderPDF"),
 
     path('super/staff/', views.staffAdmin, name="staffAdmin"),

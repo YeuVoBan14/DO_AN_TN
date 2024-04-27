@@ -7,6 +7,6 @@ urlpatterns = [
     path('products/<str:pk>/', views.getProduct),
     path('categories/', views.getCategories),
     path('categories/<str:pk>/', views.getCategory),
-    path('suppilers', views.getSuppilers),
+    path('suppilers/', views.getSuppilers),
     path('suppilers/<str:pk>/', views.getSuppiler),
 ]

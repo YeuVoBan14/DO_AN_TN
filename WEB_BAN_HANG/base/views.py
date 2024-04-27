@@ -515,6 +515,9 @@ def updateProduct(request, pk):
 def deleteProduct(request, pk):
     pageView = 'delete'
     product = Product.objects.get(id=pk)
+    if product.invoiceitem_set.exists() or product.orderitem_set.exists():
+        messages.error(request, "This product has exist in order or invoice")
+        return redirect('productAdmin')
     if request.method == 'POST':
         product.delete()
         messages.warning(request,'The selected product has been deleted!')
@@ -594,6 +597,9 @@ def updateSuppiler(request, pk):
 def deleteSuppiler(request, pk):
     pageView = 'delete'
     suppiler = Suppiler.objects.get(id=pk)
+    if suppiler.product_set.exists():
+        messages.error(request, "Thís suppiler has product to sell 😅")
+        return redirect('suppilerAdmin')
     if request.method == 'POST':
         suppiler.delete()
         messages.warning(request,'The selected suppiler has been deleted!')
@@ -653,6 +659,12 @@ def updateCategory(request, pk):
 def deleteCategory(request, pk):
     pageView = 'delete'
     category = Category.objects.get(id=pk)
+    if Category.objects.filter(parent=category).exists():
+        messages.error(request, "Can't delete this because it has children")
+        return redirect('categoryAdmin')
+    if category.product_set.exists():
+        messages.error(request, "Sorry but this category is in use")
+        return redirect('categoryAdmin')
     if request.method == 'POST':
         category.delete()
         messages.warning(request,'The selected category has been deleted!')
@@ -706,6 +718,9 @@ def updateCustomer(request,pk):
 def deleteCustomer(request, pk):
     pageView = 'delete'
     customer = User.objects.get(id=pk)
+    if Order.objects.filter(user=customer).exists():
+        messages.error(request, "You can't delete this customer")
+        return redirect('customerAdmin')
     if request.method == 'POST':
         customer.delete()
         messages.warning(request,'The selected customer has been deleted!')
@@ -785,6 +800,12 @@ def addInvoiceItem(request, suppiler, invoice_id):
 def updateInvoiceStatus(request,pk):
     pageView = 'updateStatus'
     invoice = Invoice.objects.get(id=pk)
+    if invoice.status == 4:
+        messages.error(request, 'This invoice has been delivered')
+        return redirect('invoiceAdmin')
+    if not invoice.invoiceitem_set.exists():
+        messages.error(request, "This invoice has no items!!")
+        return redirect('invoiceAdmin')
     if request.method == "POST":
         status_form = ChangeInvoiceStatus(request.POST, instance=invoice)
         if status_form.is_valid():
@@ -799,6 +820,9 @@ def updateInvoiceStatus(request,pk):
 def deleteInvoice(request, pk):
     pageView = 'delete'
     invoice = Invoice.objects.get(id=pk)
+    if invoice.invoiceitem_set.exists():
+        messages.error(request, "This invoice has product within!!")
+        return redirect('invoiceAdmin')
     if request.method == 'POST':
         invoice.delete()
         messages.warning(request,'The selected invoice has been deleted!')
@@ -873,6 +897,9 @@ def orderDetail(request, pk):
 def updateOrderStatus(request,pk):
     pageView = 'updateStatus'
     order = Order.objects.get(id=pk)
+    if order.status == 4:
+        messages.error(request, "This order has been delivered")
+        return redirect('orderAdmin')
     if request.method == "POST":
         status_form = ChangeOrderStatus(request.POST, instance=order)
         if status_form.is_valid():
@@ -882,20 +909,6 @@ def updateOrderStatus(request,pk):
         status_form = ChangeOrderStatus(instance=order)
     context = {"status_form":status_form, 'order':order, 'pageView':pageView}
     return render(request, 'base/admin/order.html', context)
-@staff_required
-@login_required(login_url='/super/login/')
-def deleteOrder(request, pk):
-    if request.user.is_superuser:
-        pageView = 'delete'
-        order = Order.objects.get(id=pk)
-        if request.method == 'POST':
-            order.delete()
-            messages.warning(request,'The selected order has been deleted!')
-            return redirect('orderAdmin')
-    else:
-        messages.error(request, 'You dont have that permit!!')
-        return redirect('admin_login')
-    return render(request,'base/admin/order.html',{'obj': order, 'pageView':pageView})
 class generateOrderPDF(View):
     @method_decorator(login_required(login_url='/super/login/'))
     @method_decorator(staff_required)
@@ -1009,6 +1022,9 @@ def updateStaffPassword(request, pk):
 def deleteStaff(request, pk):
     pageView = 'delete'
     user = User.objects.get(id=pk)
+    if Order.objects.filter(user=user).exists():
+        messages.error(request,"He/She still have an order!")
+        return redirect('staffAdmin')
     if request.method == 'POST':
         user.delete()
         messages.warning(request,'The selected staff has been deleted!')

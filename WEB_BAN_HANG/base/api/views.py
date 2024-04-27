@@ -7,8 +7,12 @@ from .serializers import ProductSerializer, CategorySerializer, SuppilerSerializ
 def getRoutes(request):
     routes = [
         'GET /api',
-        'GET /api/products',
+        'GET /api/products/',
         'GET /api/products/:id'
+        'GET /api/categories/',
+        'GET /api/categories/:id'
+        'GET /api/suppilers/',
+        'GET /api/suppilers/:id'
     ]
     return Response(routes)
 
