@@ -458,23 +458,32 @@ def addProduct(request):
         form = CreateProductForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)
-            if product.price_sell < product.price_im:
-                messages.error(request, "Sale price cannot be lower than import price.")
-                return redirect("addProduct")
-            elif product.sale_price:
+            if product.sale_price:
                 if product.sale_price < product.price_im:
                     messages.warning(request, "The sale price is less than the import price!")
-                    return redirect("addProduct")
-                elif product.sale_price > product.price_sell:
+                    return redirect('addProduct')
+                if product.sale_price > product.price_sell:
                     messages.error(request, "Sale price cannot be higher than sell price.")
-                    return redirect("addProduct")
-                elif product.sale_price and not product.is_sale:
-                    messages.error(request, "If there is a sale price, please check the 'is sale' option.")
-                    return redirect("addProduct")
+                    return redirect('addProduct')
             else:
-                product.save()
-                messages.success(request, "Successfully added a new product!")
-                return redirect("productAdmin")
+                if product.is_sale:
+                    messages.error(request, "Please enter a sale price for this item.")
+                    return redirect('addProduct')
+            
+            # Check condition for sale flag
+            if not product.sale_price and product.is_sale:
+                messages.error(request, "If there is a sale price, please check the 'is sale' option.")
+                return redirect('addProduct')
+            
+            # Ensure selling price is not lower than import price
+            if product.price_sell < product.price_im:
+                messages.error(request, "Sale price cannot be lower than import price.")
+                return redirect('addProduct')
+            
+            # If all checks pass, save the product and return success
+            product.save()
+            messages.success(request, "Your product has been updated")
+            return redirect("productAdmin")
     context = { "form": form, 'pageView': pageView }
     return render(request, 'base/admin/product.html', context)
 @staff_required
@@ -487,24 +496,32 @@ def updateProduct(request, pk):
         form = UpdateProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
             product = form.save(commit=False)
+            if product.sale_price:
+                if product.sale_price < product.price_im:
+                    messages.warning(request, "The sale price is less than the import price!")
+                    return redirect('updateProduct', pk=product.id)
+                if product.sale_price > product.price_sell:
+                    messages.error(request, "Sale price cannot be higher than sell price.")
+                    return redirect('updateProduct', pk=product.id)
+            else:
+                if product.is_sale:
+                    messages.error(request, "Please enter a sale price for this item.")
+                    return redirect('updateProduct', pk=product.id)
+            
+            # Check condition for sale flag
+            if not product.sale_price and product.is_sale:
+                messages.error(request, "If there is a sale price, please check the 'is sale' option.")
+                return redirect('updateProduct', pk=product.id)
+            
+            # Ensure selling price is not lower than import price
             if product.price_sell < product.price_im:
                 messages.error(request, "Sale price cannot be lower than import price.")
-                return redirect ("updateProduct", pk=product.id)
-            elif product.sale_price < product.price_im:
-                messages.warning(request, "The sale price is less than the import price!")
-                return redirect ("updateProduct", pk=product.id)
-            elif product.sale_price > product.price_sell:
-                messages.error(request, "Sale price cannot be higher than sell price.")
-                return redirect ("updateProduct", pk=product.id)
-            elif product.sale_price and not product.is_sale:
-                messages.error(request, "If there is a sale price, please check the 'is sale' option.")
-                return redirect ("updateProduct", pk=product.id)
-            else:
-                product.save()
-                instance = form.instance
-                form = UpdateProductForm(instance=instance)
-                messages.success(request,"Your product has been updated")
-                return redirect("productAdmin")
+                return redirect('updateProduct', pk=product.id)
+            
+            # If all checks pass, save the product and return success
+            product.save()
+            messages.success(request, "Your product has been updated")
+            return redirect("productAdmin")
         else:
             messages.error(request,"Please correct the error below.")
             return redirect('updateProduct', pk=product.id)
@@ -598,7 +615,7 @@ def deleteSuppiler(request, pk):
     pageView = 'delete'
     suppiler = Suppiler.objects.get(id=pk)
     if suppiler.product_set.exists():
-        messages.error(request, "Thís suppiler has product to sell 😅")
+        messages.error(request, "This suppiler has products to sell 😅")
         return redirect('suppilerAdmin')
     if request.method == 'POST':
         suppiler.delete()

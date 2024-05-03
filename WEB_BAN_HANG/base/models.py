@@ -77,7 +77,7 @@ class Product(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     #Sale
     is_sale = models.BooleanField(default=False)
-    sale_price = models.DecimalField(max_digits=6,decimal_places=2,default=0.0,blank=True)
+    sale_price = models.DecimalField(max_digits=6,decimal_places=2,default=0.0,blank=True,null=True)
     def __str__(self):
         return self.name
     @property
@@ -131,10 +131,7 @@ class Invoice(models.Model):
     def calculate_total_value(self):
         total_value = 0
         for item in self.invoiceitem_set.all():
-            if item.product.is_sale:
-                total_value += item.quantity * item.product.sale_price
-            else:
-                total_value += item.quantity * item.product.price_sell
+            total_value += item.quantity * item.product.price_im
         return total_value
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(Invoice,on_delete=models.CASCADE)
@@ -146,10 +143,7 @@ class InvoiceItem(models.Model):
         return self.product.name
     def item_total(self):
         quantity = self.quantity
-        if self.product.is_sale:
-            price = self.product.sale_price
-        else:
-            price = self.product.price_sell
+        price = self.product.price_im
         value = price * quantity
         return value
 class Order(models.Model):
